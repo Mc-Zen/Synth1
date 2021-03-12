@@ -187,6 +187,7 @@ protected:
 	ParamValue levelFromVel;
 	ParamValue noteOffVolumeRamp;
 
+	//create string with length 0.01 m
 	VSTMath::StringEigenvalueProblem<float, 10> system{ .01f };
 };
 
@@ -454,13 +455,11 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//sample += (SamplePrecision)(sin(n * sinusFreq + sinusPhase) * currentSinusVolume);
 			//sample = 0;
 
+			//iterate the system and multiply with volume to make it attenuatable
+			//the listening position is at 0.7 times the string length
 			sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
 
-
 			n++;
-
-
-
 
 			// add noise
 			//sample += (SamplePrecision)(this->globalParameters->noiseBuffer->at(noisePos) * currentNoiseVolume);
@@ -538,7 +537,10 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn(_pitch, velocity, _tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
 
+
+	//set length of string to the length corresponding to the frequency of input note
 	system.setLength(2.f/VoiceStatics::freqTab[_pitch]);
+	//and pinch the string at 0.5 the string length
 	system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
 }
 
@@ -558,6 +560,8 @@ void Voice<SamplePrecision>::noteOff(ParamValue velocity, int32 sampleOffset)
 	noteOffVolumeRamp = 1.0 / (timeFactor * this->sampleRate * ((this->globalParameters->releaseTime * MAX_RELEASE_TIME_SEC) + 0.005));
 	if (currentVolume)
 		noteOffVolumeRamp *= currentVolume;
+
+	//when note is off, silence the string
 	system.silence();
 }
 
@@ -585,6 +589,8 @@ void Voice<SamplePrecision>::reset()
 	currentLPQ = 0.;
 	filter->reset();
 	noteOffVolumeRamp = 0.005;
+
+	//when voice is reset, silence the string
 	system.silence();
 
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset();
@@ -596,6 +602,8 @@ void Voice<SamplePrecision>::setSampleRate(ParamValue _sampleRate)
 {
 	filter->setSampleRate(_sampleRate);
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate(_sampleRate);
+	
+	//set sample rate of string
 	system.setTimeInterval(1.0f / _sampleRate);
 }
 
