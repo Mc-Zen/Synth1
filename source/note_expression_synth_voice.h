@@ -188,7 +188,7 @@ protected:
 	ParamValue noteOffVolumeRamp;
 
 	//create string with length 0.01 m
-	VSTMath::StringEigenvalueProblem<float, 10> system{ .01f };
+	VSTMath::SphereEigenvalueProblem<float, 10> system{ /*.01f*/1.0f };
 };
 
 //-----------------------------------------------------------------------------
@@ -457,7 +457,8 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 
 			//iterate the system and multiply with volume to make it attenuatable
 			//the listening position is at 0.7 times the string length
-			sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
+			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
+			sample = currentSquareVolume * system.next({ 1,0,0 });
 
 			n++;
 
@@ -539,9 +540,12 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 
 
 	//set length of string to the length corresponding to the frequency of input note
-	system.setLength(2.f/VoiceStatics::freqTab[_pitch]);
+	//system.setLength(2.f/VoiceStatics::freqTab[_pitch]);
+	//system.setVelocity_sq((2.f / VoiceStatics::freqTab[_pitch]));
+	system.setVelocity_sq(VoiceStatics::freqTab[_pitch]);
 	//and pinch the string at 0.5 the string length
-	system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
+	//system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
+	system.pinchDelta({ 1,.5,.5 }, .5f);
 }
 
 //-----------------------------------------------------------------------------
@@ -602,7 +606,7 @@ void Voice<SamplePrecision>::setSampleRate(ParamValue _sampleRate)
 {
 	filter->setSampleRate(_sampleRate);
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate(_sampleRate);
-	
+
 	//set sample rate of string
 	system.setTimeInterval(1.0f / _sampleRate);
 }
