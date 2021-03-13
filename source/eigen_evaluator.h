@@ -6,6 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <functional>
+#include <cmath>
 
 namespace VSTMath
 {
@@ -253,6 +254,58 @@ namespace VSTMath
 	};
 
 	/*
+	 * Implementation of the eigenvalue problem of a sphere. The eigenfunctions and
+	 * -values are similar and need not be declared separately. The weights are initialized with zero.
+	 */
+	template <class T, int n>
+	class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, n>
+	{
+	public:
+		SphereEigenvalueProblem(T radius) : radius(radius) {}
+
+		virtual T spherCoords(theta, phi)
+		
+		//i=l^2+l+1+m and m from -l to l
+		//solve for l: sqrt(i)-1 <= l <= sqrt(i-1)
+		int linInd_l(int i) return(std::ceil(std::sqrt(i))-1)
+		//calc m form l and i
+		int linInd_m(int i, int l) return(i-(l*l+l+1))
+
+		int factorial(int n) { return(n == 1 || n == 0) ? 1 : factorial(n - 1) * n; }
+		float normalizer(int l, int m) { return(std::sqrt((2 * l + 1) / 2 * factorial(l - m) / factorial(l + m))) }
+
+		virtual T eigenFunction(int i, const Vector<T, 3> x) const override
+		{
+			//indice
+			int l = linInd_l(i);
+			int m = linInd_m(i,l);
+
+			//spherical coordinates
+			float theta;
+			float phi;
+
+
+			float legend = std::assoc_legendre(l, m, x);
+
+			return(1/std:sqrt(2*pi()) * normalizer(l,m) * legend * std::cos(theta) * ):
+		}
+		virtual T eigenValue_sq(int i) const override
+		{
+			int l = linInd_l(i);
+			return(-l*(l+1));
+		}
+		
+		T getRadius() const { return radius; }
+
+		void setRadius(T radius) {
+			this->radius = radius;
+		}
+
+	private:
+		T radius; // Sphere radius
+	};
+
+	/*
 	 * Implementation that allows to set specific eigenfunctions and values.
 	 */
 	template <class T, int d, int n, class F>
@@ -273,5 +326,7 @@ namespace VSTMath
 		array<F, n> eigenFunctions{};
 		array<T, n> eigenValues_sq{};
 	};
+
+	//for spherical eigenvalues need spherical coordinates and mapping function for indices
 
 }
