@@ -262,8 +262,6 @@ namespace VSTMath
 	{
 	public:
 		SphereEigenvalueProblem(T radius) : radius(radius) {}
-
-		virtual T spherCoords(theta, phi)
 		
 		//i=l^2+l+1+m and m from -l to l
 		//solve for l: sqrt(i)-1 <= l <= sqrt(i-1)
@@ -281,13 +279,13 @@ namespace VSTMath
 			int m = linInd_m(i,l);
 
 			//spherical coordinates
-			float theta;
-			float phi;
+			float theta = x[0];
+			float phi = x[1];
+			float r = x[2];
 
+			float legend = std::assoc_legendre(l, m, std::cos(theta));
 
-			float legend = std::assoc_legendre(l, m, x);
-
-			return(1/std:sqrt(2*pi()) * normalizer(l,m) * legend * std::cos(theta) * ):
+			return(std::pow(r, l) / std:sqrt(2 * pi<T>()) * normalizer(l, m) * legend * std::complex<T>(std::cos(m*phi), std::sin(m*phi)));
 		}
 		virtual T eigenValue_sq(int i) const override
 		{
