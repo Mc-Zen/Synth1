@@ -170,6 +170,12 @@ public:
 	T getTime() const { return time; }
 	// Set step time interval according to sampling rate
 	void setTimeInterval(T deltaT) { this->deltaT = deltaT; }
+	void setVelocity_sq(T v_sq) {
+		velocity_sq = v_sq;
+	}
+	T getVelocity_sq(T v) {
+		return velocity_sq;
+	}
 
 protected:
 	// Evolve time and amplitudes
@@ -178,7 +184,7 @@ protected:
 		time += deltaTime;
 		for (int i = 0; i < n; i++)
 		{
-			setAmplitude(i, amplitude(i) * std::exp(complex<T>(0, 1) * eigenValue_sq(i) * deltaTime));
+			setAmplitude(i, amplitude(i) * std::exp(complex<T>(0, 1) * /*ω=*/velocity_sq * eigenValue_sq(i) * deltaTime));
 		}
 	}
 
@@ -200,6 +206,12 @@ protected:
 private:
 	T time{ 0 };     // current Time
 	T deltaT{ 0 };   // this needs to be set to 1/(sampling rate)
+
+	/*T disp(T k_sq) const {
+		return k_sq * velocity_sq;
+	}*/
+
+	T velocity_sq = 1;
 };
 
 /*
@@ -297,17 +309,24 @@ public:
 		T theta = x[1];
 		T phi = x[2];
 
-		constexpr auto sqrtT = std::sqrt;
-
 		T legend = std::assoc_legendre(l, m, std::cos(theta));
 
 		// return only real part 
 		return  std::pow(r, l) / rsrqt2pi * normalizer(l, m) * legend * std::cos(m * phi);
 	}
 
-	const T rsrqt2pi = std::sqrtT(2 * pi<T>());
+	const T rsrqt2pi = std::sqrt(2 * pi<T>());
 
-
+	// k = ω/c
+	// k = 2π/λ    ω=2πf=2π/T
+	/*template<class T, std::enable_if<T == float>>
+	T sqrtT(T t) {
+		return std::sqrtf(t);
+	}
+	template<class T, std::enable_if<T == double>>
+	T sqrtT(T t) {
+		return std::sqrt(t);
+	}*/
 
 	T eigenValue_sq(int i) const override
 	{
