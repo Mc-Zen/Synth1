@@ -458,7 +458,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//iterate the system and multiply with volume to make it attenuatable
 			//the listening position is at 0.7 times the string length
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
-			sample = currentSquareVolume * system.next({ 1,0,0 });
+			sample = system.next({(float)currentSinusVolume, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) });
 
 			n++;
 
@@ -545,7 +545,8 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	system.setVelocity_sq(VoiceStatics::freqTab[_pitch]);
 	//and pinch the string at 0.5 the string length
 	//system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
-	system.pinchDelta({ 1,.5,.5 }, .5f);
+	//system.pinchDelta({ 1,.5,.5 }, .5f);
+	system.pinchDelta({ (float)currentSinusVolume, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) }, .5f);
 }
 
 //-----------------------------------------------------------------------------
