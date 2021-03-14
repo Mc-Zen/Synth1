@@ -67,12 +67,12 @@ struct GlobalParameterState
 	ParamValue masterTuning;	// [-1, +1]
 	ParamValue velToLevel;		// [0, +1]
 
-	ParamValue radiusStrike;		// [0, +1]
-	ParamValue radiusListening;		// [0, +1]
+	ParamValue radiusStrike;	// [0, +1]
+	ParamValue radiusListening;	// [0, +1]
 	ParamValue thetaStrike;		// [0, +1]
-	ParamValue thetaListening;		// [0, +1]
+	ParamValue thetaListening;	// [0, +1]
 	ParamValue phiStrike;		// [0, +1]
-	ParamValue phiListening;		// [0, +1]
+	ParamValue phiListening;	// [0, +1]
 
 	ParamValue releaseTime;		// [0, +1]
 
@@ -88,6 +88,13 @@ struct GlobalParameterState
 	tresult setState(IBStream* stream);
 	tresult getState(IBStream* stream);
 };
+
+constexpr ParamValue defaultRadiusStrike = 1;
+constexpr ParamValue defaultRadiusListening = 1;
+constexpr ParamValue defaultThetaStrike = 0;
+constexpr ParamValue defaultThetaListening = 0;
+constexpr ParamValue defaultPhiStrike = 0;
+constexpr ParamValue defaultPhiListening = 0;
 
 //-----------------------------------------------------------------------------
 enum VoiceParameters
@@ -190,6 +197,8 @@ protected:
 
 	//create string with length 0.01 m
 	VSTMath::SphereEigenvalueProblem<float, 10> system{ /*.01f*/1.0f };
+
+	bool noteoffFlag = false;
 };
 
 //-----------------------------------------------------------------------------
@@ -445,6 +454,12 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//the listening position is at 0.7 times the string length
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
 			sample = system.next({(float)currentRadiusListening, (float)(currentThetaListening*M_PI_MUL_2),  (float)(currentPhiListening*M_PI_MUL_2) });
+			if (noteoffFlag) {
+				// find first zero crossing
+				if(std::abs(sample)<0.0001){
+					system.silence();
+				}
+			}
 
 			n++;
 
@@ -524,13 +539,9 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	this->noteOnSampleOffset++;
 
 
-	//set length of string to the length corresponding to the frequency of input note
-	//system.setLength(2.f/VoiceStatics::freqTab[_pitch]);
-	//system.setVelocity_sq((2.f / VoiceStatics::freqTab[_pitch]));
+	noteoffFlag = false;
+	system.resetTime(); // let's avoid a discontinuity at beginning
 	system.setVelocity_sq(VoiceStatics::freqTab[_pitch]);
-	//and pinch the string at 0.5 the string length
-	//system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
-	//system.pinchDelta({ 1,.5,.5 }, .5f);
 	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike*M_PI_MUL_2),  (float)(currentPhiStrike*M_PI_MUL_2) }, .5f);
 }
 
@@ -552,7 +563,8 @@ void Voice<SamplePrecision>::noteOff(ParamValue velocity, int32 sampleOffset)
 		noteOffVolumeRamp *= currentVolume;
 
 	//when note is off, silence the string
-	system.silence();
+	//system.silence();
+	noteoffFlag = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -586,6 +598,7 @@ void Voice<SamplePrecision>::reset()
 
 	//when voice is reset, silence the string
 	system.silence();
+	noteoffFlag = false;
 
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset();
 }
