@@ -52,17 +52,21 @@ tresult GlobalParameterState::setState (IBStream* stream)
 	// version 0
 	if (!s.readInt64u (version))
 		return kResultFalse;
-	if (!s.readDouble (noiseVolume))
-		return kResultFalse;
+
 	if (!s.readDouble (radiusStrike))
 		return kResultFalse;
-	if (!s.readDouble (triangleVolume))
+	if (!s.readDouble(radiusListening))
 		return kResultFalse;
+	if (!s.readDouble(thetaStrike))
+		return kResultFalse;
+	if (!s.readDouble(thetaListening))
+		return kResultFalse;
+	if (!s.readDouble(phiStrike))
+		return kResultFalse;
+	if (!s.readDouble(phiListening))
+		return kResultFalse;
+
 	if (!s.readDouble (releaseTime))
-		return kResultFalse;
-	if (!s.readDouble (sinusDetune))
-		return kResultFalse;
-	if (!s.readDouble (triangleSlop))
 		return kResultFalse;
 	if (!s.readInt8 (bypassSNA))
 		return kResultFalse;
@@ -89,11 +93,11 @@ tresult GlobalParameterState::setState (IBStream* stream)
 		if (!s.readInt8 (tuningRange))
 			return kResultFalse;
 	}
-	if (version >= 3)
-	{
-		if (!s.readDouble (squareVolume))
-			return kResultFalse;
-	}
+	//if (version >= 3)
+	//{
+	//	if (!s.readDouble (squareVolume))
+	//		return kResultFalse;
+	//}
 	return kResultTrue;
 }
 
@@ -105,17 +109,21 @@ tresult GlobalParameterState::getState (IBStream* stream)
 	// version 0
 	if (!s.writeInt64u (currentParamStateVersion))
 		return kResultFalse;
-	if (!s.writeDouble (noiseVolume))
-		return kResultFalse;
+
 	if (!s.writeDouble (radiusStrike))
 		return kResultFalse;
-	if (!s.writeDouble (triangleVolume))
+	if (!s.writeDouble(radiusListening))
 		return kResultFalse;
+	if (!s.writeDouble(thetaStrike))
+		return kResultFalse;
+	if (!s.writeDouble(thetaListening))
+		return kResultFalse;
+	if (!s.writeDouble(phiStrike))
+		return kResultFalse;
+	if (!s.writeDouble(phiListening))
+		return kResultFalse;
+
 	if (!s.writeDouble (releaseTime))
-		return kResultFalse;
-	if (!s.writeDouble (sinusDetune))
-		return kResultFalse;
-	if (!s.writeDouble (triangleSlop))
 		return kResultFalse;
 	if (!s.writeInt8 (bypassSNA))
 		return kResultFalse;
@@ -140,9 +148,9 @@ tresult GlobalParameterState::getState (IBStream* stream)
 	if (!s.writeInt8 (tuningRange))
 		return kResultFalse;
 
-	// version 3
-	if (!s.writeDouble (squareVolume))
-		return kResultFalse;
+	//// version 3
+	//if (!s.writeDouble (squareVolume))
+	//	return kResultFalse;
 
 	return kResultTrue;
 }

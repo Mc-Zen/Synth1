@@ -157,26 +157,25 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param->setPrecision (3);
 		parameters.addParameter (param);
 		
-		param = new RangeParameter (USTRING("Noise Volume"), kParamNoiseVolume, USTRING("%"), 0, 100, 0);
-		param->setPrecision (1);
-		parameters.addParameter (param);
 		param = new RangeParameter (USTRING("Radius Strike"), kParamRadiusStrike, USTRING("%"), 0, 100, 80);
 		param->setPrecision (1);
 		parameters.addParameter (param);
-		param = new RangeParameter (USTRING("Triangle Volume"), kParamTriangleVolume, USTRING("%"), 0, 100, 20);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-		param = new RangeParameter (USTRING("Square Volume"), kParamSquareVolume, USTRING("%"), 0, 100, 80);
-		param->setPrecision (1);
-		parameters.addParameter (param);
+		param = new RangeParameter(USTRING("Radius Listening"), kParamRadiusListening, USTRING("%"), 0, 100, 80);
+		param->setPrecision(1);
+		parameters.addParameter(param);
+		param = new RangeParameter(USTRING("Theta Strike"), kParamThetaStrike, USTRING("%"), 0, 100, 80);
+		param->setPrecision(1);
+		parameters.addParameter(param);
+		param = new RangeParameter(USTRING("Theta Listening"), kParamThetaListening, USTRING("%"), 0, 100, 80);
+		param->setPrecision(1);
+		parameters.addParameter(param);
+		param = new RangeParameter(USTRING("Phi Strike"), kParamPhiStrike, USTRING("%"), 0, 100, 80);
+		param->setPrecision(1);
+		parameters.addParameter(param);
+		param = new RangeParameter(USTRING("Phi Listening"), kParamPhiListening, USTRING("%"), 0, 100, 80);
+		param->setPrecision(1);
+		parameters.addParameter(param);
 		
-		param = new RangeParameter (USTRING("Sinus Detune"), kParamSinusDetune, USTRING("cent"), -200, 200, 0);
-		param->setPrecision (0);
-		parameters.addParameter (param);
-
-		param = new RangeParameter (USTRING("Triangle Slop"), kParamTriangleSlop, USTRING("%"), 0, 100, 50);
-		param->setPrecision (0);
-		parameters.addParameter (param);
 		
 		auto* filterTypeParam = new StringListParameter (USTRING("Filter Type"), kParamFilterType);
 		filterTypeParam->appendString (USTRING("Lowpass"));
@@ -217,11 +216,17 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		
 		auto noteExp = new NoteExpressionType (kRadiusStrikeTypeID, String ("Radius Strike"), String ("Radius Strike"), String ("%"), -1, getParameterObject (kParamRadiusStrike), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
+		noteExp = new NoteExpressionType(kRadiusListeningTypeID, String("Radius Listening"), String("Radius Listening"), String("%"), -1, getParameterObject(kParamRadiusListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType(noteExp);
+		noteExp = new NoteExpressionType(kThetaStrikeTypeID, String("Theta Strike"), String("Theta Strike"), String("%"), -1, getParameterObject(kParamThetaStrike), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType(noteExp);
+		noteExp = new NoteExpressionType(kThetaListeningTypeID, String("Theta Listening"), String("Theta Listening"), String("%"), -1, getParameterObject(kParamThetaListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType(noteExp);
+		noteExp = new NoteExpressionType(kPhiStrikeTypeID, String("Phi Strike"), String("Phi Strike"), String("%"), -1, getParameterObject(kParamPhiStrike), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType(noteExp);
+		noteExp = new NoteExpressionType(kPhiListeningTypeID, String("Phi Listening"), String("Phi Listening"), String("%"), -1, getParameterObject(kParamPhiListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType(noteExp);
 
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTypeID, String ("Sinus Detune"), String ("Sin Detune"), String ("Cent"), -1, getParameterObject (kParamSinusDetune), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleVolumeTypeID, String ("Triangle Volume"), String ("Tri Vol"), String ("%"), -1, getParameterObject (kParamTriangleVolume), NoteExpressionTypeInfo::kIsAbsolute));
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSquareVolumeTypeID, String ("Square Volume"), String ("Square Vol"), String ("%"), -1, getParameterObject (kParamSquareVolume), NoteExpressionTypeInfo::kIsAbsolute));
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kNoiseVolumeTypeID, String ("Noise Volume"), String ("Noise Vol"), String ("%"), -1, getParameterObject (kParamNoiseVolume), NoteExpressionTypeInfo::kIsAbsolute));
 		
 		auto rNoteExp = new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
 		rNoteExp->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
@@ -262,13 +267,13 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 		setParamNormalized (kParamFilterFreqModDepth, (gps.freqModDepth + 1) / 2.);
 
 		setParamNormalized (kParamReleaseTime, gps.releaseTime);
-		setParamNormalized (kParamNoiseVolume, gps.noiseVolume);
-		setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
-		setParamNormalized (kParamTriangleVolume, gps.triangleVolume);
-		setParamNormalized (kParamSquareVolume, gps.squareVolume);
 
-		setParamNormalized (kParamSinusDetune, (gps.sinusDetune + 1) / 2.);
-		setParamNormalized (kParamTriangleSlop, gps.triangleSlop);
+		setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
+		setParamNormalized(kParamRadiusListening, gps.radiusListening);
+		setParamNormalized(kParamThetaStrike, gps.thetaStrike);
+		setParamNormalized(kParamThetaListening, gps.thetaListening);
+		setParamNormalized(kParamPhiStrike, gps.phiStrike);
+		setParamNormalized(kParamPhiListening, gps.phiListening);
 
 		setParamNormalized (kParamFilterType,
 		                    plainParamToNormalized (kParamFilterType, gps.filterType));
@@ -293,9 +298,7 @@ tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value
 		NoteExpressionType* net = noteExpressionTypes.getNoteExpressionType (kTuningTypeID);
 		if (value > 0)
 		{
-			noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (
-			    kTriangleSlopeTypeID, String ("Triangle Slope"), String ("Tri Slope"), String ("%"),
-			    -1, getParameterObject (kParamTriangleSlop), NoteExpressionTypeInfo::kIsAbsolute));
+			//noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleSlopeTypeID, String ("Triangle Slope"), String ("Tri Slope"), String ("%"),-1, getParameterObject (kParamTriangleSlop), NoteExpressionTypeInfo::kIsAbsolute));
 			if (net)
 			{
 				net->getInfo ().valueDesc.minimum = 0.5 - 3 * VoiceStatics::kNormTuningOneTune;
@@ -304,7 +307,7 @@ tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value
 		}
 		else
 		{
-			noteExpressionTypes.removeNoteExpressionType (kTriangleSlopeTypeID);
+			//noteExpressionTypes.removeNoteExpressionType (kTriangleSlopeTypeID);
 			if (net)
 			{
 				net->getInfo ().valueDesc.minimum = 0.5 - VoiceStatics::kNormTuningOneOctave;
