@@ -61,7 +61,7 @@ enum
 {
 	kParamReleaseTime,
 	kParamNoiseVolume,
-	kParamSinusVolume,
+	kParamRadiusStrike,
 	kParamTriangleVolume,
 	kParamSinusDetune,
 	kParamBypassSNA,
@@ -113,7 +113,7 @@ public:
 		kNoiseVolumeTypeID = kCustomStart,
 		kFilterFreqModTypeID,
 		kFilterQModTypeID,
-		kSinusVolumeTypeID,
+		kRadiusStrikeTypeID,
 		kTriangleVolumeTypeID,
 		kFilterTypeTypeID,
 		kTriangleSlopeTypeID,

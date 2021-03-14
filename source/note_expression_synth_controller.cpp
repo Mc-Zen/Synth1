@@ -160,7 +160,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Noise Volume"), kParamNoiseVolume, USTRING("%"), 0, 100, 0);
 		param->setPrecision (1);
 		parameters.addParameter (param);
-		param = new RangeParameter (USTRING("Sinus Volume"), kParamSinusVolume, USTRING("%"), 0, 100, 80);
+		param = new RangeParameter (USTRING("Radius Strike"), kParamRadiusStrike, USTRING("%"), 0, 100, 80);
 		param->setPrecision (1);
 		parameters.addParameter (param);
 		param = new RangeParameter (USTRING("Triangle Volume"), kParamTriangleVolume, USTRING("%"), 0, 100, 20);
@@ -215,7 +215,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		tuningNoteExpression->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIXMovement);
 		noteExpressionTypes.addNoteExpressionType (tuningNoteExpression);
 		
-		auto noteExp = new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute);
+		auto noteExp = new NoteExpressionType (kRadiusStrikeTypeID, String ("Radius Strike"), String ("Radius Strike"), String ("%"), -1, getParameterObject (kParamRadiusStrike), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
 
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTypeID, String ("Sinus Detune"), String ("Sin Detune"), String ("Cent"), -1, getParameterObject (kParamSinusDetune), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
@@ -263,7 +263,7 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 
 		setParamNormalized (kParamReleaseTime, gps.releaseTime);
 		setParamNormalized (kParamNoiseVolume, gps.noiseVolume);
-		setParamNormalized (kParamSinusVolume, gps.sinusVolume);
+		setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
 		setParamNormalized (kParamTriangleVolume, gps.triangleVolume);
 		setParamNormalized (kParamSquareVolume, gps.squareVolume);
 

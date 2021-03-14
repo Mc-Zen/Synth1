@@ -54,7 +54,7 @@ tresult GlobalParameterState::setState (IBStream* stream)
 		return kResultFalse;
 	if (!s.readDouble (noiseVolume))
 		return kResultFalse;
-	if (!s.readDouble (sinusVolume))
+	if (!s.readDouble (radiusStrike))
 		return kResultFalse;
 	if (!s.readDouble (triangleVolume))
 		return kResultFalse;
@@ -107,7 +107,7 @@ tresult GlobalParameterState::getState (IBStream* stream)
 		return kResultFalse;
 	if (!s.writeDouble (noiseVolume))
 		return kResultFalse;
-	if (!s.writeDouble (sinusVolume))
+	if (!s.writeDouble (radiusStrike))
 		return kResultFalse;
 	if (!s.writeDouble (triangleVolume))
 		return kResultFalse;

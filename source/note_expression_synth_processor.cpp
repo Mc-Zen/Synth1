@@ -60,7 +60,7 @@ Processor::Processor () : voiceProcessor (nullptr)
 	paramState.velToLevel = 1.;
 
 	paramState.noiseVolume = 0.1;
-	paramState.sinusVolume = 1.;
+	paramState.radiusStrike = 1.;
 	paramState.triangleVolume = 1.;
 	paramState.releaseTime = 0.;
 	paramState.sinusDetune = 0;
@@ -230,9 +230,9 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.noiseVolume = value;
 							break;
 						}
-						case kParamSinusVolume:
+						case kParamRadiusStrike:
 						{
-							paramState.sinusVolume = value;
+							paramState.radiusStrike = value;
 							break;
 						}
 						case kParamTriangleVolume:

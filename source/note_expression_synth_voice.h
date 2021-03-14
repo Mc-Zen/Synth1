@@ -68,7 +68,7 @@ struct GlobalParameterState
 	ParamValue velToLevel;		// [0, +1]
 
 	ParamValue noiseVolume;		// [0, +1]
-	ParamValue sinusVolume;		// [0, +1]
+	ParamValue radiusStrike;		// [0, +1]
 	ParamValue triangleVolume;	// [0, +1]
 	ParamValue squareVolume;	// [0, +1]
 
@@ -100,7 +100,7 @@ enum VoiceParameters
 	kNoiseVolume,
 	kFilterFrequencyMod,
 	kFilterQMod,
-	kSinusVolume,
+	kRadiusStrike,
 	kTriangleVolume,
 	kFilterType,
 	kTriangleSlope,
@@ -176,7 +176,7 @@ protected:
 	ParamValue currentPanningLeft;
 	ParamValue currentPanningRight;
 	ParamValue currentNoiseVolume;
-	ParamValue currentSinusVolume;
+	ParamValue currentRadiusStrike;
 	ParamValue currentSinusDetune;
 	ParamValue currentSquareVolume;
 	ParamValue currentTriangleVolume;
@@ -259,9 +259,9 @@ void Voice<SamplePrecision>::setNoteExpressionValue(int32 index, ParamValue valu
 		break;
 	}
 	//------------------------------
-	case Controller::kSinusVolumeTypeID:
+	case Controller::kRadiusStrikeTypeID:
 	{
-		VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kSinusVolume, value * 2.);
+		VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kRadiusStrike, value * 2.);
 		break;
 	}
 	//------------------------------
@@ -391,9 +391,9 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 	{
 		noiseVolumeRamp = (this->values[kNoiseVolume] - currentNoiseVolume) / rampTime;
 	}
-	if (this->values[kSinusVolume] != currentSinusVolume)
+	if (this->values[kRadiusStrike] != currentRadiusStrike)
 	{
-		sinusVolumeRamp = (this->values[kSinusVolume] - currentSinusVolume) / rampTime;
+		sinusVolumeRamp = (this->values[kRadiusStrike] - currentRadiusStrike) / rampTime;
 	}
 	if (this->values[kSquareVolume] != currentSquareVolume)
 	{
@@ -458,7 +458,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//iterate the system and multiply with volume to make it attenuatable
 			//the listening position is at 0.7 times the string length
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
-			sample = system.next({(float)currentSinusVolume, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) });
+			sample = system.next({(float)currentRadiusStrike, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) });
 
 			n++;
 
@@ -495,7 +495,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			currentPanningLeft += panningLeftRamp;
 			currentPanningRight += panningRightRamp;
 			currentNoiseVolume += noiseVolumeRamp;
-			currentSinusVolume += sinusVolumeRamp;
+			currentRadiusStrike += sinusVolumeRamp;
 			currentSquareVolume += squareVolumeRamp;
 			currentTriangleVolume += triangleVolumeRamp;
 			currentTriangleSlope += triangleSlopeRamp;
@@ -512,7 +512,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	this->values[kVolumeMod] = 0;
 	levelFromVel = 1.f + this->globalParameters->velToLevel * (velocity - 1.);
 
-	currentSinusVolume = this->values[kSinusVolume] = this->globalParameters->sinusVolume;
+	currentRadiusStrike = this->values[kRadiusStrike] = this->globalParameters->radiusStrike;
 	currentTriangleVolume = this->values[kTriangleVolume] = this->globalParameters->triangleVolume;
 	currentNoiseVolume = this->values[kNoiseVolume] = this->globalParameters->noiseVolume;
 	currentTriangleSlope = this->values[kTriangleSlope] = this->globalParameters->triangleSlop;
@@ -546,7 +546,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	//and pinch the string at 0.5 the string length
 	//system.pinchDelta(_pitch * system.getLength() / 128.f, .5f);
 	//system.pinchDelta({ 1,.5,.5 }, .5f);
-	system.pinchDelta({ (float)currentSinusVolume, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) }, .5f);
+	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentTriangleVolume*M_PI_MUL_2),  (float)(currentSquareVolume*M_PI_MUL_2) }, .5f);
 }
 
 //-----------------------------------------------------------------------------
@@ -587,7 +587,7 @@ void Voice<SamplePrecision>::reset()
 	currentPanningLeft = this->values[kPanningLeft] = 1.;
 	currentPanningRight = this->values[kPanningRight] = 1.;
 	currentNoiseVolume = this->values[kNoiseVolume] = 0.5;
-	currentSinusVolume = this->values[kSinusVolume] = 0.5;
+	currentRadiusStrike = this->values[kRadiusStrike] = 0.5;
 	currentSquareVolume = this->values[kSquareVolume] = 0.5;
 	currentTriangleVolume = this->values[kTriangleVolume] = 0.5;
 	currentLPFreq = 1.;
