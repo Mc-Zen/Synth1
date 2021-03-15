@@ -76,6 +76,8 @@ protected:
 	VoiceProcessor* voiceProcessor;
 	GlobalParameterState paramState;
 	OneReaderOneWriter::RingBuffer<Event> controllerEvents {16};
+
+	VSTMath::SphereEigenvalueProblem<float, 10, 1> globalSystem;
 };
 
 }}} // namespaces

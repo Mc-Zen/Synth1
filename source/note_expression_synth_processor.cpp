@@ -47,76 +47,76 @@ namespace Vst {
 namespace NoteExpressionSynth {
 
 //-----------------------------------------------------------------------------
-FUID Processor::cid (0xc7ec93ee, 0xde6644fe, 0x9337b908, 0x45b58473);
+FUID Processor::cid(0xc7ec93ee, 0xde6644fe, 0x9337b908, 0x45b58473);
 
 //-----------------------------------------------------------------------------
-Processor::Processor () : voiceProcessor (nullptr)
+Processor::Processor() : voiceProcessor(nullptr)
 {
-	setControllerClass (Controller::cid);
+	setControllerClass(Controller::cid);
 
-	memset (&paramState, 0, sizeof (paramState));
+	memset(&paramState, 0, sizeof(paramState));
 
 	paramState.default();
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::initialize (FUnknown* context)
+tresult PLUGIN_API Processor::initialize(FUnknown* context)
 {
-	tresult result = AudioEffect::initialize (context);
+	tresult result = AudioEffect::initialize(context);
 	if (result == kResultTrue)
 	{
-		addAudioOutput (STR16 ("Audio Output"), SpeakerArr::kStereo);
-		addEventInput (STR16 ("Event Input"), 1);
+		addAudioOutput(STR16("Audio Output"), SpeakerArr::kStereo);
+		addEventInput(STR16("Event Input"), 1);
 	}
 	return result;
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API Processor::notify (IMessage* message)
+tresult PLUGIN_API Processor::notify(IMessage* message)
 {
-	auto msgID = message->getMessageID ();
-	if (strcmp (msgID, MsgIDEvent) != 0)
+	auto msgID = message->getMessageID();
+	if (strcmp(msgID, MsgIDEvent) != 0)
 		return kResultFalse;
-	if (auto attr = message->getAttributes ())
+	if (auto attr = message->getAttributes())
 	{
 		const void* msgData;
 		uint32 msgSize;
-		if (attr->getBinary (MsgIDEvent, msgData, msgSize) == kResultTrue &&
-		    msgSize == sizeof (Event))
+		if (attr->getBinary(MsgIDEvent, msgData, msgSize) == kResultTrue &&
+			msgSize == sizeof(Event))
 		{
 			auto evt = reinterpret_cast<const Event*>(msgData);
-			controllerEvents.push (*evt);
+			controllerEvents.push(*evt);
 		}
 	}
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::setState (IBStream* state)
+tresult PLUGIN_API Processor::setState(IBStream* state)
 {
-	return paramState.setState (state);
+	return paramState.setState(state);
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::getState (IBStream* state)
+tresult PLUGIN_API Processor::getState(IBStream* state)
 {
-	return paramState.getState (state);
+	return paramState.getState(state);
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
-                                                  SpeakerArrangement* outputs, int32 numOuts)
+tresult PLUGIN_API Processor::setBusArrangements(SpeakerArrangement* inputs, int32 numIns,
+	SpeakerArrangement* outputs, int32 numOuts)
 {
 	// we only support one stereo output bus
 	if (numIns == 0 && numOuts == 1 && outputs[0] == SpeakerArr::kStereo)
 	{
-		return AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+		return AudioEffect::setBusArrangements(inputs, numIns, outputs, numOuts);
 	}
 	return kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::canProcessSampleSize (int32 symbolicSampleSize)
+tresult PLUGIN_API Processor::canProcessSampleSize(int32 symbolicSampleSize)
 {
 	if (symbolicSampleSize == kSample32 || symbolicSampleSize == kSample64)
 	{
@@ -126,34 +126,33 @@ tresult PLUGIN_API Processor::canProcessSampleSize (int32 symbolicSampleSize)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::setActive (TBool state)
+tresult PLUGIN_API Processor::setActive(TBool state)
 {
 	if (state)
 	{
 		if (paramState.noiseBuffer == nullptr)
-			paramState.noiseBuffer = new BrownNoise<float> ((int32)processSetup.sampleRate,
-			                                                (float)processSetup.sampleRate);
+			paramState.noiseBuffer = new BrownNoise<float>((int32)processSetup.sampleRate, (float)processSetup.sampleRate);
 		if (voiceProcessor == nullptr)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
 			{
 				voiceProcessor =
-				    new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES,
-				                                     GlobalParameterState> (
-				        (float)processSetup.sampleRate, &paramState);
+					new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES,
+					GlobalParameterState>((float)processSetup.sampleRate, &paramState);
 			}
 			else if (processSetup.symbolicSampleSize == kSample64)
 			{
 				voiceProcessor =
-				    new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES,
-				                                     GlobalParameterState> (
-				        (float)processSetup.sampleRate, &paramState);
+					new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES,
+					GlobalParameterState>((float)processSetup.sampleRate, &paramState);
 			}
 			else
 			{
 				return kInvalidArgument;
 			}
 		}
+
+		globalSystem.setTimeInterval(1.0f / (float)processSetup.sampleRate);
 	}
 	else
 	{
@@ -168,19 +167,19 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 		}
 		paramState.noiseBuffer = nullptr;
 	}
-	return AudioEffect::setActive (state);
+	return AudioEffect::setActive(state);
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::process (ProcessData& data)
+tresult PLUGIN_API Processor::process(ProcessData& data)
 {
 	// TODO: maybe try to make this nearly sample accurate
 	if (data.inputParameterChanges)
 	{
-		int32 count = data.inputParameterChanges->getParameterCount ();
+		int32 count = data.inputParameterChanges->getParameterCount();
 		for (int32 i = 0; i < count; i++)
 		{
-			IParamValueQueue* queue = data.inputParameterChanges->getParameterData (i);
+			IParamValueQueue* queue = data.inputParameterChanges->getParameterData(i);
 			if (queue)
 			{
 				processParameters(queue, paramState);
@@ -189,31 +188,28 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 	}
 	tresult result;
 	Event evt;
-	while (controllerEvents.pop (evt))
+	while (controllerEvents.pop(evt))
 	{
-		voiceProcessor->processEvent (evt);
+		voiceProcessor->processEvent(evt);
 	}
 
 	// flush mode
 	if (data.numOutputs < 1)
 		result = kResultTrue;
 	else
-		result = voiceProcessor->process (data);
+		result = voiceProcessor->process(data);
 	if (result == kResultTrue)
 	{
 		if (data.outputParameterChanges)
 		{
 			int32 index;
-			IParamValueQueue* queue =
-			    data.outputParameterChanges->addParameterData (kParamActiveVoices, index);
+			IParamValueQueue* queue = data.outputParameterChanges->addParameterData(kParamActiveVoices, index);
 			if (queue)
 			{
-				queue->addPoint (
-				    0, (ParamValue)voiceProcessor->getActiveVoices () / (ParamValue)MAX_VOICES,
-				    index);
+				queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
 			}
 		}
-		if (voiceProcessor->getActiveVoices () == 0 && data.numOutputs > 0)
+		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
 		{
 			data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
 		}

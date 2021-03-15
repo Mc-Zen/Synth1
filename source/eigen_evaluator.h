@@ -313,7 +313,7 @@ template <class T, int N, int numChannels>
 class StringEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 1, N, numChannels>
 {
 public:
-	StringEigenvalueProblem(T length) : length(length) {}
+	StringEigenvalueProblem(T length=1) : length(length) {}
 
 	T eigenFunction(int i, const Vector<T, 1> x) const override
 	{
@@ -391,7 +391,8 @@ public:
 
 	T eigenValue_sqrt(int i) const override {
 		int l = linearIndex(i).first;
-		return /*std::sqrt(*/l * (l + 1)/*)*/;
+		return l * (l + 1);
+		//return std::sqrt(l * (l + 1));
 	}
 
 };
