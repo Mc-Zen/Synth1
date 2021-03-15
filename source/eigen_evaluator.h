@@ -225,11 +225,66 @@ private:
 };
 
 /*
+ * Optimized version for cases where the listening positions don't change every sample
+ * 
+ * Eigenfunctions are evaluated int setListeningPositions() at every listening position and stored. 
+ * When asking for the next sample, the cached values are used to compute the current deflection. 
+ */
+
+template <class T, int d, int n, int numChannels = 1>
+class FixedListenerEigenvalueProblem : public EigenvalueProblem<T, d, n>
+{
+public:
+
+	void setListeningPositions(const array<Vector<T, d>, numChannels>& listeningPositions) {
+		for (int i = 0; i < numChannels; ++i) {
+			for (int j = 0; j < n; ++j) {
+				eigenFunctionEvaluations[i][j] = eigenFunction(j, listeningPositions[i]);
+			}
+		}
+	}
+
+	array<T, numChannels> next() {
+		evolve(deltaT);
+		return evaluate(time);
+	}
+
+	T nextFirstChannel() {
+		evolve(deltaT);
+		return evaluateFirstChannel(time);
+	}
+
+protected:
+
+	array<T, channels> evaluate(T t) {
+		array<T, channels> results;
+		for (int i = 0; i < numChannels; ++i) {
+			for (int j = 0; j < n; ++j) {
+				result[i] += (amplitude(j) * eigenFunctionEvaluations[i][j]).real();
+			}
+		}
+		return results;
+	}
+	T evaluateFirstChannel(T t) {
+		T result;
+		for (int j = 0; j < n; ++j) {
+			result += (amplitude(j) * eigenFunctionEvaluations[0][j]).real();
+		}
+		return result;
+	}
+
+private:
+	// Eigenfunctions evaluated at the listening positions last set through setListeningPositions()
+	array<array<complex<T>, n>, numChannels> eigenFunctionEvaluations;
+
+};
+
+/*
  * As all implementation probably keep a list of complex amplitudes, this (abstract) class implements
  * this feature for actual implementations to derive from.
  */
-template <class T, int d, int n>
-class EigenvalueProblemAmplitudeBase : public EigenvalueProblem<T, d, n> {
+template <class T, int d, int n, int numChannels>
+class EigenvalueProblemAmplitudeBase : public FixedListenerEigenvalueProblem<T, d, n, numChannels> {
 public:
 	virtual complex<T> amplitude(int i) const override
 	{
@@ -249,8 +304,8 @@ private:
  * Implementation of the eigenvalue problem of a 1D string with fixed length. The eigenfunctions and
  * -values are similar and need not be declared separately. The weights are initialized with zero.
  */
-template <class T, int n>
-class StringEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 1, n>
+template <class T, int n, int numChannels>
+class StringEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 1, n, numChannels>
 {
 public:
 	StringEigenvalueProblem(T length) : length(length) {}
@@ -279,8 +334,8 @@ private:
  * Implementation of the eigenvalue problem of a sphere. The eigenfunctions and
  * -values are similar and need not be declared separately. The weights are initialized with zero.
  */
-template <class T, int n>
-class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, n>
+template <class T, int n, int numChannels>
+class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, n, numChannels>
 {
 public:
 	SphereEigenvalueProblem(T radius) : radius(radius) {}
