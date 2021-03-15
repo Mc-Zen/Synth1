@@ -167,8 +167,16 @@ protected:
 	ParamValue levelFromVel;
 	ParamValue noteOffVolumeRamp;
 
+	static constexpr int maxDimension = 3;
+	using type = float;
+	VSTMath::Vector<type, maxDimension> strikePosition{};
+	VSTMath::Vector<type, maxDimension> listenerPosition{};
+
 	//create string with length 0.01 m
-	VSTMath::SphereEigenvalueProblem<float, 10, 1> system{ /*.01f*/1.0f };
+	VSTMath::SphereEigenvalueProblem<type, 10, 1> system;
+
+	type strikeAmount = 1.f;
+	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
 
 	bool noteoffFlag = false;
 };
@@ -425,8 +433,14 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//iterate the system and multiply with volume to make it attenuatable
 			//the listening position is at 0.7 times the string length
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
-			system.setFirstListeningPosition({ (float)currentRadiusListening, (float)(currentThetaListening * M_PI_MUL_2),  (float)(currentPhiListening * M_PI_MUL_2) });
-			sample = system.nextFirstChannel();
+			//system.setFirstListeningPosition({ (float)currentRadiusListening, (float)(currentThetaListening * M_PI_MUL_2),  (float)(currentPhiListening * M_PI_MUL_2) ,.5 });
+
+			const auto& pos = listenerPosition;
+			constexpr type twopi = 2 * VSTMath::pi<type>();
+			system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
+			sample = 10 * system.nextFirstChannel();
+
+
 			if (noteoffFlag) {
 				// find first zero crossing
 				if (std::abs(sample) < 0.0001) {
@@ -489,7 +503,16 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	currentThetaListening = this->values[kThetaListening] = this->globalParameters->thetaListening;
 	currentPhiStrike = this->values[kPhiStrike] = this->globalParameters->phiStrike;
 	currentPhiListening = this->values[kPhiListening] = this->globalParameters->phiListening;
-
+	strikePosition = {
+		(type)(this->globalParameters->radiusStrike) ,
+		(type)(this->globalParameters->thetaStrike) ,
+		(type)(this->globalParameters->phiStrike)
+	};
+	listenerPosition = {
+		(type)(this->globalParameters->radiusListening) ,
+		(type)(this->globalParameters->thetaListening) ,
+		(type)(this->globalParameters->phiListening)
+	};
 
 	// filter setting
 	currentLPFreq = this->globalParameters->filterFreq;
@@ -514,8 +537,12 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 
 	noteoffFlag = false;
 	system.resetTime(); // let's avoid a discontinuity at beginning
-	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::min(-(float)this->globalParameters->decay * 5.f,0.f) });
-	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2) }, 1.f);
+	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)this->globalParameters->decay * 5.f,0.f) });
+	//system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2),.4 }, 1.f);
+
+	const auto& pos = listenerPosition;
+	constexpr type twopi = 2 * VSTMath::pi<type>();
+	system.pinchDelta({ pos[0],twopi * pos[1],twopi * pos[2] }, strikeAmount);
 }
 
 //-----------------------------------------------------------------------------
@@ -535,8 +562,7 @@ void Voice<SamplePrecision>::noteOff(ParamValue velocity, int32 sampleOffset)
 	if (currentVolume)
 		noteOffVolumeRamp *= currentVolume;
 
-	//when note is off, silence the string
-	//system.silence();
+	//when note is off, set flag that system should be silenced at next zero crossing
 	noteoffFlag = true;
 }
 

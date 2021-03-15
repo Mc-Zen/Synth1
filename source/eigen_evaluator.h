@@ -46,7 +46,7 @@ public:
 		std::copy(std::begin(elems), std::begin(elems) + h, values.begin());
 		std::fill(values.begin() + h, values.end(), T{});
 	}
-	Vector(const T& value)
+	Vector(const T& value = 0)
 	{
 		std::fill(values.begin(), values.end(), value);
 	}
@@ -192,7 +192,7 @@ protected:
 		time += deltaTime;
 		for (int i = 0; i < N; i++)
 		{
-			setAmplitude(i, amplitude(i) * std::exp(complex<T>(0, 1) * /*ω=*/velocity_sq * eigenValue_sq(i) * deltaTime));
+			setAmplitude(i, amplitude(i) * std::exp(complex<T>(0, 1) * /*ω=*/velocity_sq * eigenValue_sqrt(i) * deltaTime));
 		}
 	}
 
@@ -207,7 +207,7 @@ protected:
 	}
 
 	virtual T eigenFunction(int i, const Vector<T, d> x) const = 0;
-	virtual T eigenValue_sq(int i) const = 0; // Using squares of eigenvalues for better performance
+	virtual T eigenValue_sqrt(int i) const = 0; // Using squares of eigenvalues for better performance
 	virtual complex<T> amplitude(int i) const = 0;
 	virtual void setAmplitude(int i, complex<T> value) = 0;
 
@@ -238,7 +238,7 @@ public:
 	void setListeningPositions(const array<Vector<T, d>, numChannels>& listeningPositions) {
 		for (int i = 0; i < numChannels; ++i) {
 			for (int j = 0; j < N; ++j) {
-				eigenFunctionEvaluations[i][j] = eigenFunction(j, listeningPositions[i]);
+				eigenFunctionEvaluations[i][j] = this->eigenFunction(j, listeningPositions[i]);
 			}
 		}
 	}
@@ -250,13 +250,13 @@ public:
 	}
 
 	array<T, numChannels> next() {
-		evolve(deltaT);
-		return evaluate(getTime());
+		this->evolve(this->deltaT);
+		return evaluate(this->getTime());
 	}
 
 	T nextFirstChannel() {
-		evolve(deltaT);
-		return evaluateFirstChannel(getTime());
+		evolve(this->deltaT);
+		return evaluateFirstChannel(this->getTime());
 	}
 
 protected:
@@ -265,7 +265,7 @@ protected:
 		array<T, numChannels> results{ 0 };
 		for (int i = 0; i < numChannels; ++i) {
 			for (int j = 0; j < N; ++j) {
-				result[i] += (amplitude(j) * eigenFunctionEvaluations[i][j]).real();
+				results[i] += (this->amplitude(j) * eigenFunctionEvaluations[i][j]).real();
 			}
 		}
 		return results;
@@ -273,7 +273,7 @@ protected:
 	T evaluateFirstChannel(T t) {
 		T result{ 0 };
 		for (int j = 0; j < N; ++j) {
-			result += (amplitude(j) * eigenFunctionEvaluations[0][j]).real();
+			result += (this->amplitude(j) * eigenFunctionEvaluations[0][j]).real();
 		}
 		return result;
 	}
@@ -321,7 +321,7 @@ public:
 		// sin(2π·x/2L)
 		// f = 1/2L
 	}
-	T eigenValue_sq(int i) const override
+	T eigenValue_sqrt(int i) const override
 	{
 		return (i + 1) * pi<T>() / length;
 	}
@@ -343,7 +343,7 @@ template <class T, int N, int numChannels>
 class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, N, numChannels>
 {
 public:
-	SphereEigenvalueProblem(T radius) : radius(radius) {}
+	SphereEigenvalueProblem() {}
 
 	Vector<T, 3> toCartesian(T theta, T phi) const {
 		return { std::sin(theta) * std::cos(phi),std::sin(theta) * std::sin(phi),std::cos(theta) };
@@ -367,15 +367,14 @@ public:
 		return(std::sqrt((2 * l + 1) / 2 * factorial(l - m) / factorial(l + m)));
 	}
 
-	T eigenFunction(int i, const Vector<T, 3> x) const override
-	{
+	T eigenFunction(int i, const Vector<T, 3> x) const override {
 		// indices:
 		auto lm = linearIndex(i);
 		int l = lm.first;
 		int m = lm.second;
 
 		// spherical coordinates
-		T r = x[0] * getRadius();
+		T r = x[0];
 		T theta = x[1];
 		T phi = x[2];
 
@@ -389,29 +388,117 @@ public:
 
 	// k = ω/c
 	// k = 2π/λ    ω=2πf=2π/T
-	/*template<class T, std::enable_if<T == float>>
-	T sqrtT(T t) {
-		return std::sqrtf(t);
-	}
-	template<class T, std::enable_if<T == double>>
-	T sqrtT(T t) {
-		return std::sqrt(t);
-	}*/
 
-	T eigenValue_sq(int i) const override
-	{
+	T eigenValue_sqrt(int i) const override {
 		int l = linearIndex(i).first;
-		return -l * (l + 1);
+		return /*std::sqrt(*/l * (l + 1)/*)*/;
 	}
 
-	T getRadius() const { return radius; }
+};
 
-	void setRadius(T radius) {
-		this->radius = radius;
+
+
+template <class T, int d, int N, int numChannels>
+class CubeEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, d, N, numChannels> {
+public:
+	CubeEigenvalueProblem() {
+		computeEigenvalues_and_ks();
+	}
+protected:
+	/*
+
+	 d
+	___
+	111 = λ₁ |
+	211 = λ₂ |
+	212 = λ₃ | N
+			 |  ...
+
+			 N Eigenwerte, aber N·d Quantenzahlen/Wellenzahlen
+
+	*/
+	void computeEigenvalues_and_ks() {
+		int r = getRApprox(d, N);
+		std::vector<Vector<T, d + 1>> kvecs;
+
+		int maxNumEigenvalues = std::pow(r + 1, d);
+		if (maxNumEigenvalues < N) throw std::exception("r<N");
+
+		for (int i = 0; i < maxNumEigenvalues; ++i) {
+			Vector<T, d + 1> kvec{}; // last entry sums up the squares of the other entries
+			int kindex = i;
+			for (int j = 0; j < d; j++) {
+				kvec[j] = kindex % (r + 1) + 1;
+				kindex /= (r + 1);
+				kvec[d] += kvec[j] * kvec[j];
+			}
+			kvec[d] = static_cast<T>(std::sqrt(kvec[d]));
+
+			kvecs.push_back(kvec);
+		}
+
+		std::sort(kvecs.begin(), kvecs.end(), [](Vector<T, d + 1>& a, Vector<T, d + 1>& b) {return a[d] < b[d]; });
+		for (auto& a : kvecs) {
+			//std::cout << a << "\n";
+		}
+		std::copy(kvecs.begin(), kvecs.begin() + N, ks_and_eigenvalues.begin());
+	}
+	/*
+	0000..
+	1000..
+	0100..
+	0010..
+	 .
+	 .
+	1100
+	0110
+	 .
+	 .
+	1110
+	 .
+	 .
+	1111
+
+	*/
+	int getRApprox(int d, int N) {
+		// N =!  V_sphere / 2^d
+		// with
+		//       | π^(d/2) r^d /(d/2)!               even d
+		// V =   |
+		//       | 2·(.5(d-1))!·(4π)^.5(d-1)r^d/d!   odd d 
+		T r = 0;
+		if (!(d % 2)) { // even d
+			r = 2 * std::pow<T>(N / std::pow(pi<T>(), d / 2) * factorial(d / 2), T{ 1 } / d);
+		} // odd d
+		else {
+			r = 2 * std::pow<T>(N / std::pow(4 * pi<T>(), (d - 1) / 2) * factorial(d) / factorial((d - 1) / 2) / T{ 2 }, T{ 1 } / d);
+		}
+		// r = largest k we will get
+		return static_cast<int>(std::ceil(r));
+	}
+
+
+	int factorial(int n) const {
+		return n <= 1 ? 1 : factorial(n - 1) * n;
+	}
+
+protected:
+	T eigenFunction(int i, const Vector<T, d> x) const override
+	{
+		T result{ 1 };
+		for (int j = 0; j < d; ++j) {
+			result *= std::sin(ks_and_eigenvalues[i][j] * pi<T>() * x[j]);
+		}
+		return result;
+	}
+
+	T eigenValue_sqrt(int i) const override
+	{
+		return ks_and_eigenvalues[i][d];
 	}
 
 private:
-	T radius; // Sphere radius
+	array<Vector<T, d + 1>, N> ks_and_eigenvalues{};
 };
 
 /*
@@ -427,7 +514,7 @@ public:
 	{
 		return eigenFunctions[i](x);
 	}
-	virtual T eigenValue_sq(int i) const override
+	virtual T eigenValue_sqrt(int i) const override
 	{
 		return eigenValues_sq[i];
 	}
