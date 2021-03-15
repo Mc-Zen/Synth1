@@ -40,6 +40,7 @@
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include <algorithm>
+#include "parameters.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -182,7 +183,9 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 			IParamValueQueue* queue = data.inputParameterChanges->getParameterData (i);
 			if (queue)
 			{
-				int32 sampleOffset;
+				//
+				processParameters(queue, paramState);
+				/*int32 sampleOffset;
 				ParamValue value;
 				ParamID pid = queue->getParameterId ();
 				if (queue->getPoint (queue->getPointCount () - 1, sampleOffset, value) ==
@@ -276,7 +279,7 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							break;
 						}
 					}
-				}
+				}//*/
 			}
 		}
 	}

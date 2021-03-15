@@ -46,89 +46,6 @@ namespace NoteExpressionSynth {
 
 FUID Controller::cid (0x882ca7ff, 0x7f93430f, 0xb967e4d8, 0x9b482fc9);
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-class PanNoteExpressionType : public RangeNoteExpressionType
-{
-public:
-	PanNoteExpressionType ()
-	: RangeNoteExpressionType (
-	      kPanTypeID, String ("Pan"), String ("Pan"), nullptr, -1, 0, -100, 100,
-	      NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsAbsolute, 0)
-	{
-	}
-
-	tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE
-	{
-		if (valueNormalized == 0.5)
-			UString128 ("C").copyTo (string, 128);
-		else if (valueNormalized == 0)
-			UString128 ("L").copyTo (string, 128);
-		else if (valueNormalized == 1)
-			UString128 ("R").copyTo (string, 128);
-		else
-			RangeNoteExpressionType::getStringByValue (valueNormalized, string);
-		return kResultTrue;
-	}
-	
-	tresult getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE
-	{
-		String str (string);
-		if (str == "C")
-		{
-			valueNormalized = 0.5;
-			return kResultTrue;
-		}
-		else if (str == "L")
-		{
-			valueNormalized = 0.;
-			return kResultTrue;
-		}
-		else if (str == "R")
-		{
-			valueNormalized = 1.;
-			return kResultTrue;
-		}
-		return RangeNoteExpressionType::getValueByString (string, valueNormalized);
-	}
-	OBJ_METHODS(PanNoteExpressionType, RangeNoteExpressionType)
-};
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-class ReleaseTimeModNoteExpressionType : public NoteExpressionType
-{
-public:
-	ReleaseTimeModNoteExpressionType ()
-	: NoteExpressionType (Controller::kReleaseTimeModTypeID, String ("Release Time"), String ("RelTime"), String ("%"),
-	                     -1, 0.5, 0., 1., 0, NoteExpressionTypeInfo::kIsBipolar|NoteExpressionTypeInfo::kIsOneShot)
-	{
-	}
-	
-	tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE
-	{
-		UString128 wrapper;
-		double timeFactor = pow (100., 2 * (valueNormalized - 0.5));
-		wrapper.printFloat (timeFactor, timeFactor > 10 ? 1 : 2);
-		wrapper.copyTo (string, 128);
-		return kResultTrue;
-	}
-	
-	tresult getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE
-	{
-		String wrapper ((TChar*)string);
-		ParamValue tmp;
-		if (wrapper.scanFloat (tmp))
-		{
-			valueNormalized = Bound (0.0, 1.0, log10 (tmp) / 4. + 0.5);
-			return kResultTrue;
-		}
-		return kResultFalse;
-	}
-	OBJ_METHODS(ReleaseTimeModNoteExpressionType, NoteExpressionType)
-};
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -343,6 +260,72 @@ tresult PLUGIN_API Controller::getPhysicalUIMapping (int32 busIndex, int16 chann
 	return kResultFalse;
 }
 
+PanNoteExpressionType::PanNoteExpressionType()
+	: RangeNoteExpressionType(
+		kPanTypeID, String("Pan"), String("Pan"), nullptr, -1, 0, -100, 100,
+		NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsAbsolute, 0)
+{
+}
+
+tresult PanNoteExpressionType::getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) 
+{
+	if (valueNormalized == 0.5)
+		UString128("C").copyTo(string, 128);
+	else if (valueNormalized == 0)
+		UString128("L").copyTo(string, 128);
+	else if (valueNormalized == 1)
+		UString128("R").copyTo(string, 128);
+	else
+		RangeNoteExpressionType::getStringByValue(valueNormalized, string);
+	return kResultTrue;
+}
+
+tresult PanNoteExpressionType::getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) 
+{
+	String str(string);
+	if (str == "C")
+	{
+		valueNormalized = 0.5;
+		return kResultTrue;
+	}
+	else if (str == "L")
+	{
+		valueNormalized = 0.;
+		return kResultTrue;
+	}
+	else if (str == "R")
+	{
+		valueNormalized = 1.;
+		return kResultTrue;
+	}
+	return RangeNoteExpressionType::getValueByString(string, valueNormalized);
+}
+
+ReleaseTimeModNoteExpressionType::ReleaseTimeModNoteExpressionType()
+	: NoteExpressionType(Controller::kReleaseTimeModTypeID, String("Release Time"), String("RelTime"), String("%"),
+		-1, 0.5, 0., 1., 0, NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsOneShot)
+{
+}
+tresult ReleaseTimeModNoteExpressionType::getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+{
+	UString128 wrapper;
+	double timeFactor = pow(100., 2 * (valueNormalized - 0.5));
+	wrapper.printFloat(timeFactor, timeFactor > 10 ? 1 : 2);
+	wrapper.copyTo(string, 128);
+	return kResultTrue;
+}
+
+tresult ReleaseTimeModNoteExpressionType::getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+{
+	String wrapper((TChar*)string);
+	ParamValue tmp;
+	if (wrapper.scanFloat(tmp))
+	{
+		valueNormalized = Bound(0.0, 1.0, log10(tmp) / 4. + 0.5);
+		return kResultTrue;
+	}
+	return kResultFalse;
+}
 //------------------------------------------------------------------------
 } // NoteExpressionSynth
 } // Vst

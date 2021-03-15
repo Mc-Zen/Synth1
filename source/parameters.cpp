@@ -1,98 +1,218 @@
 #include "parameters.h"
 #include "base/source/fstreamer.h"
 #include "public.sdk/samples/vst/common/logscale.h"
-#include "public.sdk/source/vst/vstnoteexpressiontypes.h"
-#include "public.sdk/source/vst/vsteditcontroller.h"
-#include "pluginterfaces/vst/ivstnoteexpression.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "note_expression_synth_voice.h" // For VoiceStatics
 #include "note_expression_synth_controller.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
 
 #include <array>
 #include <limits>
+
+
 namespace Steinberg::Vst::NoteExpressionSynth {
 
-class PanNoteExpressionType : public RangeNoteExpressionType
+
+void GlobalParameterState::default() {
+	noiseBuffer = nullptr;
+	masterVolume = .5;
+	masterTuning = 0;
+	velToLevel = 1.;
+
+	radiusStrike = 1;
+	radiusListening = 1;
+	thetaStrike = 1;
+	thetaListening = 1;
+	phiStrike = 1;
+	phiListening = 1;
+
+	releaseTime = 0;
+
+	filterFreq = 1;
+	filterQ = 0;
+	freqModDepth = 1;
+
+	filterType = 0;
+	tuningRange = 1;
+
+	bypassSNA = 0;
+}
+
+
+void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState) {
+	int32 sampleOffset;
+	ParamValue value;
+	ParamID pid = queue->getParameterId();
+
+	if (queue->getPoint(queue->getPointCount() - 1, sampleOffset, value) == kResultTrue) {
+		switch (pid) {
+		case kParamMasterVolume:
+			paramState.masterVolume = value;
+			break;
+		case kParamMasterTuning:
+			paramState.masterTuning = 2 * (value - 0.5);
+			break;
+		case kParamVelToLevel:
+			paramState.velToLevel = value;
+			break;
+		case kParamFilterFreqModDepth:
+			paramState.freqModDepth = 2 * (value - 0.5);
+			break;
+
+		case kParamRadiusStrike:
+			paramState.radiusStrike = value;
+			break;
+		case kParamRadiusListening:
+			paramState.radiusListening = value;
+			break;
+		case kParamThetaStrike:
+			paramState.thetaStrike = value;
+			break;
+		case kParamThetaListening:
+			paramState.thetaListening = value;
+			break;
+		case kParamPhiStrike:
+			paramState.phiStrike = value;
+			break;
+		case kParamPhiListening:
+			paramState.phiListening = value;
+			break;
+
+		case kParamReleaseTime:
+			paramState.releaseTime = value;
+			break;
+		case kParamFilterType:
+			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
+			break;
+
+		case kParamFilterFreq:
+			paramState.filterFreq = value;
+			break;
+		case kParamFilterQ:
+			paramState.filterQ = value;
+			break;
+		case kParamBypassSNA:
+			paramState.bypassSNA = (value >= 0.5) ? 1 : 0;
+			break;
+		case kParamTuningRange:
+			paramState.tuningRange = std::min<int8>((int8)(NUM_TUNING_RANGE * value), NUM_TUNING_RANGE - 1);
+			break;
+		}
+	}
+}
+
+static uint64 currentParamStateVersion = 3;
+
+tresult GlobalParameterState::setState(IBStream* stream)
 {
-public:
-	PanNoteExpressionType()
-		: RangeNoteExpressionType(
-			kPanTypeID, String("Pan"), String("Pan"), nullptr, -1, 0, -100, 100,
-			NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsAbsolute, 0)
-	{
-	}
+	IBStreamer s(stream, kLittleEndian);
+	uint64 version = 0;
 
-	tresult getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE
-	{
-		if (valueNormalized == 0.5)
-			UString128("C").copyTo(string, 128);
-		else if (valueNormalized == 0)
-			UString128("L").copyTo(string, 128);
-		else if (valueNormalized == 1)
-			UString128("R").copyTo(string, 128);
-		else
-			RangeNoteExpressionType::getStringByValue(valueNormalized, string);
-		return kResultTrue;
-	}
-
-	tresult getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE
-	{
-		String str(string);
-		if (str == "C")
-		{
-			valueNormalized = 0.5;
-			return kResultTrue;
-		}
-		else if (str == "L")
-		{
-			valueNormalized = 0.;
-			return kResultTrue;
-		}
-		else if (str == "R")
-		{
-			valueNormalized = 1.;
-			return kResultTrue;
-		}
-		return RangeNoteExpressionType::getValueByString(string, valueNormalized);
-	}
-	OBJ_METHODS(PanNoteExpressionType, RangeNoteExpressionType)
-};
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-class ReleaseTimeModNoteExpressionType : public NoteExpressionType
-{
-public:
-	ReleaseTimeModNoteExpressionType()
-		: NoteExpressionType(Controller::kReleaseTimeModTypeID, String("Release Time"), String("RelTime"), String("%"),
-			-1, 0.5, 0., 1., 0, NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsOneShot)
-	{
-	}
-
-	tresult getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE
-	{
-		UString128 wrapper;
-		double timeFactor = pow(100., 2 * (valueNormalized - 0.5));
-		wrapper.printFloat(timeFactor, timeFactor > 10 ? 1 : 2);
-		wrapper.copyTo(string, 128);
-		return kResultTrue;
-	}
-
-	tresult getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE
-	{
-		String wrapper((TChar*)string);
-		ParamValue tmp;
-		if (wrapper.scanFloat(tmp))
-		{
-			valueNormalized = Bound(0.0, 1.0, log10(tmp) / 4. + 0.5);
-			return kResultTrue;
-		}
+	// version 0
+	if (!s.readInt64u(version))
 		return kResultFalse;
+
+	if (!s.readDouble(radiusStrike))
+		return kResultFalse;
+	if (!s.readDouble(radiusListening))
+		return kResultFalse;
+	if (!s.readDouble(thetaStrike))
+		return kResultFalse;
+	if (!s.readDouble(thetaListening))
+		return kResultFalse;
+	if (!s.readDouble(phiStrike))
+		return kResultFalse;
+	if (!s.readDouble(phiListening))
+		return kResultFalse;
+
+	if (!s.readDouble(releaseTime))
+		return kResultFalse;
+	if (!s.readInt8(bypassSNA))
+		return kResultFalse;
+
+	if (version >= 1)
+	{
+		if (!s.readInt8(filterType))
+			return kResultFalse;
+		if (!s.readDouble(filterFreq))
+			return kResultFalse;
+		if (!s.readDouble(filterQ))
+			return kResultFalse;
 	}
-	OBJ_METHODS(ReleaseTimeModNoteExpressionType, NoteExpressionType)
-};
+	if (version >= 2)
+	{
+		if (!s.readDouble(masterVolume))
+			return kResultFalse;
+		if (!s.readDouble(masterTuning))
+			return kResultFalse;
+		if (!s.readDouble(velToLevel))
+			return kResultFalse;
+		if (!s.readDouble(freqModDepth))
+			return kResultFalse;
+		if (!s.readInt8(tuningRange))
+			return kResultFalse;
+	}
+	//if (version >= 3)
+	//{
+	//	if (!s.readDouble (squareVolume))
+	//		return kResultFalse;
+	//}
+	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
+tresult GlobalParameterState::getState(IBStream* stream)
+{
+	IBStreamer s(stream, kLittleEndian);
+
+	// version 0
+	if (!s.writeInt64u(currentParamStateVersion))
+		return kResultFalse;
+
+	if (!s.writeDouble(radiusStrike))
+		return kResultFalse;
+	if (!s.writeDouble(radiusListening))
+		return kResultFalse;
+	if (!s.writeDouble(thetaStrike))
+		return kResultFalse;
+	if (!s.writeDouble(thetaListening))
+		return kResultFalse;
+	if (!s.writeDouble(phiStrike))
+		return kResultFalse;
+	if (!s.writeDouble(phiListening))
+		return kResultFalse;
+
+	if (!s.writeDouble(releaseTime))
+		return kResultFalse;
+	if (!s.writeInt8(bypassSNA))
+		return kResultFalse;
+
+	// version 1
+	if (!s.writeInt8(filterType))
+		return kResultFalse;
+	if (!s.writeDouble(filterFreq))
+		return kResultFalse;
+	if (!s.writeDouble(filterQ))
+		return kResultFalse;
+
+	// version 2
+	if (!s.writeDouble(masterVolume))
+		return kResultFalse;
+	if (!s.writeDouble(masterTuning))
+		return kResultFalse;
+	if (!s.writeDouble(velToLevel))
+		return kResultFalse;
+	if (!s.writeDouble(freqModDepth))
+		return kResultFalse;
+	if (!s.writeInt8(tuningRange))
+		return kResultFalse;
+
+	//// version 3
+	//if (!s.writeDouble (squareVolume))
+	//	return kResultFalse;
+
+	return kResultTrue;
+}
+
 
 void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	Parameter* param;
@@ -161,7 +281,7 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 }
 
 /*void initNoteExpressions(Steinberg::Vst::NoteExpressionTypeContainer& noteExpressionTypes ) {
-	
+
 	// Init Note Expression Types
 	auto volumeNoteExp = new NoteExpressionType(kVolumeTypeID, String("Volume"), String("Vol"), nullptr, -1, 1., 0., 1., 0, 0);
 	volumeNoteExp->setPhysicalUITypeID(PhysicalUITypeIDs::kPUIPressure);
@@ -198,142 +318,5 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 }*/
 
 
-
-void GlobalParameterState::default() {
-	noiseBuffer = nullptr;
-	masterVolume = .5;
-	masterTuning = 0;
-	velToLevel = 1.;
-
-	radiusStrike = 1;
-	radiusListening = 1;
-	thetaStrike = 1;
-	thetaListening = 1;
-	phiStrike = 1;
-	phiListening = 1;
-
-	releaseTime = 0;
-
-	filterFreq = 1;
-	filterQ = 0;
-	freqModDepth = 1;
-
-	filterType = 0;
-	tuningRange = 1;
-
-	bypassSNA = 0;
-}
-
-tresult GlobalParameterState::setState(IBStream* stream)
-{
-	IBStreamer s(stream, kLittleEndian);
-	uint64 version = 0;
-
-	// version 0
-	if (!s.readInt64u(version))
-		return kResultFalse;
-
-	if (!s.readDouble(radiusStrike))
-		return kResultFalse;
-	if (!s.readDouble(radiusListening))
-		return kResultFalse;
-	if (!s.readDouble(thetaStrike))
-		return kResultFalse;
-	if (!s.readDouble(thetaListening))
-		return kResultFalse;
-	if (!s.readDouble(phiStrike))
-		return kResultFalse;
-	if (!s.readDouble(phiListening))
-		return kResultFalse;
-
-	if (!s.readDouble(releaseTime))
-		return kResultFalse;
-	if (!s.readInt8(bypassSNA))
-		return kResultFalse;
-
-	if (version >= 1)
-	{
-		if (!s.readInt8(filterType))
-			return kResultFalse;
-		if (!s.readDouble(filterFreq))
-			return kResultFalse;
-		if (!s.readDouble(filterQ))
-			return kResultFalse;
-	}
-	if (version >= 2)
-	{
-		if (!s.readDouble(masterVolume))
-			return kResultFalse;
-		if (!s.readDouble(masterTuning))
-			return kResultFalse;
-		if (!s.readDouble(velToLevel))
-			return kResultFalse;
-		if (!s.readDouble(freqModDepth))
-			return kResultFalse;
-		if (!s.readInt8(tuningRange))
-			return kResultFalse;
-	}
-	//if (version >= 3)
-	//{
-	//	if (!s.readDouble (squareVolume))
-	//		return kResultFalse;
-	//}
-	return kResultTrue;
-}
-static uint64 currentParamStateVersion = 3;
-
-//-----------------------------------------------------------------------------
-tresult GlobalParameterState::getState(IBStream* stream)
-{
-	IBStreamer s(stream, kLittleEndian);
-
-	// version 0
-	if (!s.writeInt64u(currentParamStateVersion))
-		return kResultFalse;
-
-	if (!s.writeDouble(radiusStrike))
-		return kResultFalse;
-	if (!s.writeDouble(radiusListening))
-		return kResultFalse;
-	if (!s.writeDouble(thetaStrike))
-		return kResultFalse;
-	if (!s.writeDouble(thetaListening))
-		return kResultFalse;
-	if (!s.writeDouble(phiStrike))
-		return kResultFalse;
-	if (!s.writeDouble(phiListening))
-		return kResultFalse;
-
-	if (!s.writeDouble(releaseTime))
-		return kResultFalse;
-	if (!s.writeInt8(bypassSNA))
-		return kResultFalse;
-
-	// version 1
-	if (!s.writeInt8(filterType))
-		return kResultFalse;
-	if (!s.writeDouble(filterFreq))
-		return kResultFalse;
-	if (!s.writeDouble(filterQ))
-		return kResultFalse;
-
-	// version 2
-	if (!s.writeDouble(masterVolume))
-		return kResultFalse;
-	if (!s.writeDouble(masterTuning))
-		return kResultFalse;
-	if (!s.writeDouble(velToLevel))
-		return kResultFalse;
-	if (!s.writeDouble(freqModDepth))
-		return kResultFalse;
-	if (!s.writeInt8(tuningRange))
-		return kResultFalse;
-
-	//// version 3
-	//if (!s.writeDouble (squareVolume))
-	//	return kResultFalse;
-
-	return kResultTrue;
-}
 
 }

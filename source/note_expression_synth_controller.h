@@ -120,6 +120,34 @@ protected:
 	std::array<ParamID, ControllerNumbers::kCountCtrlNumber> midiCCMapping;
 };
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+class PanNoteExpressionType : public RangeNoteExpressionType
+{
+public:
+	PanNoteExpressionType();
+	tresult getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE;
+	tresult getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
+
+	OBJ_METHODS(PanNoteExpressionType, RangeNoteExpressionType)
+};
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+class ReleaseTimeModNoteExpressionType : public NoteExpressionType
+{
+public:
+	ReleaseTimeModNoteExpressionType();
+	tresult getStringByValue(NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE;
+	tresult getValueByString(const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
+
+	OBJ_METHODS(ReleaseTimeModNoteExpressionType, NoteExpressionType)
+};
+
 //------------------------------------------------------------------------
 static constexpr auto MsgIDEvent = "Event";
 

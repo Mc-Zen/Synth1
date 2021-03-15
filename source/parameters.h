@@ -11,12 +11,11 @@
 #define NUM_TUNING_RANGE		2 
 
 namespace Steinberg {
-
 class IBStream;
 
 namespace Vst {
-//class ParameterContainer;
 class NoteExpressionTypeContainer;
+class IParamValueQueue;
 }
 }
 namespace Steinberg::Vst::NoteExpressionSynth {
@@ -47,10 +46,7 @@ enum
 	kNumGlobalParameters
 };
 
-
-void initParameters(Steinberg::Vst::ParameterContainer& parameters);
-//void initNoteExpressions(Steinberg::Vst::NoteExpressionTypeContainer& noteExpressionTypes);
-
+// Global Parameters state as stored by Processor
 struct GlobalParameterState
 {
 	BrownNoise<float>* noiseBuffer;
@@ -80,8 +76,17 @@ struct GlobalParameterState
 	tresult setState(IBStream* stream);
 	tresult getState(IBStream* stream);
 
-
+	// Set parameterState to default values;
 	void default();
 };
+
+// Add all necessary parameters to the ParameterContainer. Called from Controller
+void initParameters(Steinberg::Vst::ParameterContainer& parameters);
+// Add all necessary note expressions to the NoteExpressionTypeContainer. Called from Controller
+//void initNoteExpressions(Steinberg::Vst::NoteExpressionTypeContainer& noteExpressionTypes);
+
+// Read parameters from queue and write the values to a GlobalParameterState. Called from Processor
+void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState);
+
 
 }
