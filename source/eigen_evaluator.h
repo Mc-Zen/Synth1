@@ -17,8 +17,8 @@ namespace VSTMath
  */
 template <class T>
 using complex = std::complex<T>;
-template <class T, int n>
-using array = std::array<T, n>;
+template <class T, int N>
+using array = std::array<T, N>;
 
 template <typename T>
 constexpr T pi()
@@ -101,7 +101,7 @@ public:
  * (Abstract) eigenvalue problem base class that implements the main procedure with eigenfunctions and -values
  * and declares methods to evaluate the eigenfunctions, -values and weights for the i-th eigenvalue.
  */
-template <class T, int d, int n>
+template <class T, int d, int N>
 class EigenvalueProblem
 {
 public:
@@ -141,16 +141,16 @@ public:
 	// "Pinch" at the system with delta peak.
 	void pinchDelta(const Vector<T, d> x, T amount)
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < N; i++)
 		{
 			setAmplitude(i, amplitude(i) + eigenFunction(i, x) * amount);
 		}
 	}
 
 	// "Pinch" at the system by adding to all amplitudes.
-	void pinch(const array<complex<T>, n>& values)
+	void pinch(const array<complex<T>, N>& values)
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < N; i++)
 		{
 			setAmplitude(i, amplitude(i) + values[i]);
 		}
@@ -162,7 +162,7 @@ public:
 	// Set all amplitudes to zero
 	void silence()
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < N; i++)
 		{
 			setAmplitude(i, T{ 0 });
 		}
@@ -192,7 +192,7 @@ protected:
 	void evolve(T deltaTime)
 	{
 		time += deltaTime;
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < N; i++)
 		{
 			setAmplitude(i, amplitude(i) * std::exp(complex<T>(0, 1) * /*ω=*/velocity_sq * eigenValue_sq(i) * deltaTime));
 		}
@@ -201,7 +201,7 @@ protected:
 	T evaluate(T t, const Vector<T, d> x)
 	{
 		complex<T> result{ 0 };
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < N; i++)
 		{
 			result += amplitude(i) * eigenFunction(i, x);
 		}
@@ -213,9 +213,10 @@ protected:
 	virtual complex<T> amplitude(int i) const = 0;
 	virtual void setAmplitude(int i, complex<T> value) = 0;
 
+	T deltaT{ 0 };   // this needs to be set to 1/(sampling rate)
+
 private:
 	T time{ 0 };     // current Time
-	T deltaT{ 0 };   // this needs to be set to 1/(sampling rate)
 
 	/*T disp(T k_sq) const {
 		return k_sq * velocity_sq;
@@ -226,48 +227,54 @@ private:
 
 /*
  * Optimized version for cases where the listening positions don't change every sample
- * 
- * Eigenfunctions are evaluated int setListeningPositions() at every listening position and stored. 
- * When asking for the next sample, the cached values are used to compute the current deflection. 
+ *
+ * Eigenfunctions are evaluated int setListeningPositions() at every listening position and stored.
+ * When asking for the next sample, the cached values are used to compute the current deflection.
  */
 
-template <class T, int d, int n, int numChannels = 1>
-class FixedListenerEigenvalueProblem : public EigenvalueProblem<T, d, n>
+template <class T, int d, int N, int numChannels = 1>
+class FixedListenerEigenvalueProblem : public EigenvalueProblem<T, d, N>
 {
 public:
 
 	void setListeningPositions(const array<Vector<T, d>, numChannels>& listeningPositions) {
 		for (int i = 0; i < numChannels; ++i) {
-			for (int j = 0; j < n; ++j) {
+			for (int j = 0; j < N; ++j) {
 				eigenFunctionEvaluations[i][j] = eigenFunction(j, listeningPositions[i]);
 			}
 		}
 	}
+	void setFirstListeningPosition(const Vector<T, d>& listeningPosition) {
+		for (int j = 0; j < N; ++j) {
+			eigenFunctionEvaluations[0][j] = eigenFunction(j, listeningPosition[0]);
+		}
+
+	}
 
 	array<T, numChannels> next() {
 		evolve(deltaT);
-		return evaluate(time);
+		return evaluate(getTime());
 	}
 
 	T nextFirstChannel() {
 		evolve(deltaT);
-		return evaluateFirstChannel(time);
+		return evaluateFirstChannel(getTime());
 	}
 
 protected:
 
-	array<T, channels> evaluate(T t) {
-		array<T, channels> results;
+	array<T, numChannels> evaluate(T t) {
+		array<T, numChannels> results{ 0 };
 		for (int i = 0; i < numChannels; ++i) {
-			for (int j = 0; j < n; ++j) {
+			for (int j = 0; j < N; ++j) {
 				result[i] += (amplitude(j) * eigenFunctionEvaluations[i][j]).real();
 			}
 		}
 		return results;
 	}
 	T evaluateFirstChannel(T t) {
-		T result;
-		for (int j = 0; j < n; ++j) {
+		T result{ 0 };
+		for (int j = 0; j < N; ++j) {
 			result += (amplitude(j) * eigenFunctionEvaluations[0][j]).real();
 		}
 		return result;
@@ -275,7 +282,7 @@ protected:
 
 private:
 	// Eigenfunctions evaluated at the listening positions last set through setListeningPositions()
-	array<array<complex<T>, n>, numChannels> eigenFunctionEvaluations;
+	array<array<complex<T>, N>, numChannels> eigenFunctionEvaluations;
 
 };
 
@@ -283,8 +290,8 @@ private:
  * As all implementation probably keep a list of complex amplitudes, this (abstract) class implements
  * this feature for actual implementations to derive from.
  */
-template <class T, int d, int n, int numChannels>
-class EigenvalueProblemAmplitudeBase : public FixedListenerEigenvalueProblem<T, d, n, numChannels> {
+template <class T, int d, int N, int numChannels>
+class EigenvalueProblemAmplitudeBase : public FixedListenerEigenvalueProblem<T, d, N, numChannels> {
 public:
 	virtual complex<T> amplitude(int i) const override
 	{
@@ -296,7 +303,7 @@ public:
 	};
 
 private:
-	array<complex<T>, n> amplitudes{}; // all default initialized with 0
+	array<complex<T>, N> amplitudes{}; // all default initialized with 0
 };
 
 
@@ -304,8 +311,8 @@ private:
  * Implementation of the eigenvalue problem of a 1D string with fixed length. The eigenfunctions and
  * -values are similar and need not be declared separately. The weights are initialized with zero.
  */
-template <class T, int n, int numChannels>
-class StringEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 1, n, numChannels>
+template <class T, int N, int numChannels>
+class StringEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 1, N, numChannels>
 {
 public:
 	StringEigenvalueProblem(T length) : length(length) {}
@@ -334,8 +341,8 @@ private:
  * Implementation of the eigenvalue problem of a sphere. The eigenfunctions and
  * -values are similar and need not be declared separately. The weights are initialized with zero.
  */
-template <class T, int n, int numChannels>
-class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, n, numChannels>
+template <class T, int N, int numChannels>
+class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, N, numChannels>
 {
 public:
 	SphereEigenvalueProblem(T radius) : radius(radius) {}
@@ -412,8 +419,8 @@ private:
 /*
  * Implementation that allows to set specific eigenfunctions and values.
  */
-template <class T, int d, int n, class F>
-class IndividualFunctionEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, d, n>
+template <class T, int d, int N, int numChannels, class F>
+class IndividualFunctionEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, d, N, numChannels>
 {
 public:
 	IndividualFunctionEigenvalueProblem() {}
@@ -427,8 +434,8 @@ public:
 		return eigenValues_sq[i];
 	}
 
-	array<F, n> eigenFunctions{};
-	array<T, n> eigenValues_sq{};
+	array<F, N> eigenFunctions{};
+	array<T, N> eigenValues_sq{};
 };
 
 //for spherical eigenvalues need spherical coordinates and mapping function for indices

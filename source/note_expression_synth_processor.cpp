@@ -55,23 +55,7 @@ Processor::Processor () : voiceProcessor (nullptr)
 
 	memset (&paramState, 0, sizeof (paramState));
 
-	paramState.masterVolume = 0.5;
-	paramState.masterTuning = 0;
-	paramState.velToLevel = 1.;
-
-	paramState.radiusStrike = 1.;
-	paramState.radiusListening = 1.;
-	paramState.thetaStrike = 1.;
-	paramState.thetaListening = 1.;
-	paramState.phiStrike = 1.;
-	paramState.phiListening = 1.;
-
-	paramState.releaseTime = 0.;
-	paramState.filterFreq = 1.;
-	paramState.filterQ = 0.;
-	paramState.filterType = 0;
-	paramState.freqModDepth = 1.;
-	paramState.bypassSNA = 0;
+	paramState.default();
 }
 
 //-----------------------------------------------------------------------------

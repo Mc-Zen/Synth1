@@ -44,41 +44,13 @@
 #include "pluginterfaces/vst/ivstphysicalui.h"
 #include <array>
 #include <limits>
+#include "parameters.h"
 
-#define MAX_VOICES				64
-#define MAX_RELEASE_TIME_SEC	5.0
-#define NUM_FILTER_TYPE			3
-#define NUM_TUNING_RANGE		2 
 
 namespace Steinberg {
 namespace Vst {
 namespace NoteExpressionSynth {
 
-//-----------------------------------------------------------------------------
-// Global Parameters
-//-----------------------------------------------------------------------------
-enum
-{
-	kParamReleaseTime,
-	kParamRadiusStrike,
-	kParamRadiusListening,
-	kParamThetaStrike,
-	kParamThetaListening,
-	kParamPhiStrike,
-	kParamPhiListening,
-	kParamBypassSNA,
-	kParamFilterType,
-	kParamFilterFreq,
-	kParamFilterQ,
-	kParamMasterVolume,
-	kParamMasterTuning,
-	kParamVelToLevel,
-	kParamFilterFreqModDepth,
-	kParamTuningRange,
-	kParamActiveVoices,
-
-	kNumGlobalParameters
-};
 
 //-----------------------------------------------------------------------------
 /** Example Note Expression Edit Controller

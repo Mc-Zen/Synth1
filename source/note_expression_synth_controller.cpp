@@ -139,70 +139,9 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 	if (result == kResultTrue)
 	{
 	// Init parameters
-		Parameter* param;
+
+		initParameters(parameters);
 		
-		param = new RangeParameter (USTRING("Master Volume"), kParamMasterVolume, USTRING("%"), 0, 100, 80);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-
-		param = new RangeParameter (USTRING("Master Tuning"), kParamMasterTuning, USTRING("cent"), -200, 200, 0);
-		param->setPrecision (0);
-		parameters.addParameter (param);
-
-		param = new RangeParameter (USTRING("Velocity To Level"), kParamVelToLevel, USTRING("%"), 0, 100, 100);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-
-		param = new RangeParameter (USTRING("Release Time"), kParamReleaseTime, USTRING("sec"), 0.005, MAX_RELEASE_TIME_SEC, 0.025);
-		param->setPrecision (3);
-		parameters.addParameter (param);
-		
-		param = new RangeParameter (USTRING("Radius Strike"), kParamRadiusStrike, USTRING("%"), 0, 100, 80);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-		param = new RangeParameter(USTRING("Radius Listening"), kParamRadiusListening, USTRING("%"), 0, 100, 80);
-		param->setPrecision(1);
-		parameters.addParameter(param);
-		param = new RangeParameter(USTRING("Theta Strike"), kParamThetaStrike, USTRING("%"), 0, 100, 80);
-		param->setPrecision(1);
-		parameters.addParameter(param);
-		param = new RangeParameter(USTRING("Theta Listening"), kParamThetaListening, USTRING("%"), 0, 100, 80);
-		param->setPrecision(1);
-		parameters.addParameter(param);
-		param = new RangeParameter(USTRING("Phi Strike"), kParamPhiStrike, USTRING("%"), 0, 100, 80);
-		param->setPrecision(1);
-		parameters.addParameter(param);
-		param = new RangeParameter(USTRING("Phi Listening"), kParamPhiListening, USTRING("%"), 0, 100, 80);
-		param->setPrecision(1);
-		parameters.addParameter(param);
-		
-		
-		auto* filterTypeParam = new StringListParameter (USTRING("Filter Type"), kParamFilterType);
-		filterTypeParam->appendString (USTRING("Lowpass"));
-		filterTypeParam->appendString (USTRING("Highpass"));
-		filterTypeParam->appendString (USTRING("Bandpass"));
-		parameters.addParameter (filterTypeParam);
-		
-		param = new LogScaleParameter<ParamValue> (USTRING("Filter Frequency"), kParamFilterFreq, VoiceStatics::freqLogScale);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-
-		param = new RangeParameter (USTRING("Frequency Mod Depth"), kParamFilterFreqModDepth, USTRING("%"), -100, 100, 100);
-		param->setPrecision (1);
-		parameters.addParameter (param);
-
-		param = parameters.addParameter (USTRING("Filter Q"), nullptr, 0, 0, ParameterInfo::kCanAutomate, kParamFilterQ);
-		param->setPrecision (2);
-
-		parameters.addParameter (USTRING("Bypass SNA"), nullptr, 1, 0, ParameterInfo::kCanAutomate, kParamBypassSNA);
-
-		parameters.addParameter (new RangeParameter (USTRING("Active Voices"), kParamActiveVoices, nullptr, 0, MAX_VOICES, 0, MAX_VOICES, ParameterInfo::kIsReadOnly));
-
-		auto* tuningRangeParam = new StringListParameter (USTRING("Tuning Range"), kParamTuningRange, nullptr, ParameterInfo::kIsList);
-		tuningRangeParam->appendString (USTRING("[-1, +1] Octave"));
-		tuningRangeParam->appendString (USTRING("[-3, +2] Tunes"));
-		parameters.addParameter (tuningRangeParam);
-
 	// Init Note Expression Types
 		auto volumeNoteExp = new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), nullptr, -1, 1., 0., 1., 0, 0);
 		volumeNoteExp->setPhysicalUITypeID(PhysicalUITypeIDs::kPUIPressure);

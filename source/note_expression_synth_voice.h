@@ -46,6 +46,7 @@
 #include <algorithm>
 
 #include "eigen_evaluator.h"
+#include "parameters.h"
 
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
@@ -59,35 +60,6 @@ namespace Vst {
 namespace NoteExpressionSynth {
 
 //-----------------------------------------------------------------------------
-struct GlobalParameterState
-{
-	BrownNoise<float>* noiseBuffer;
-
-	ParamValue masterVolume;	// [0, +1]
-	ParamValue masterTuning;	// [-1, +1]
-	ParamValue velToLevel;		// [0, +1]
-
-	ParamValue radiusStrike;	// [0, +1]
-	ParamValue radiusListening;	// [0, +1]
-	ParamValue thetaStrike;		// [0, +1]
-	ParamValue thetaListening;	// [0, +1]
-	ParamValue phiStrike;		// [0, +1]
-	ParamValue phiListening;	// [0, +1]
-
-	ParamValue releaseTime;		// [0, +1]
-
-	ParamValue filterFreq;		// [-1, +1]
-	ParamValue filterQ;			// [-1, +1]
-	ParamValue freqModDepth;	// [-1, +1]
-
-	int8 filterType;			// [0, 1, 2]
-	int8 tuningRange;			// [0, 1]
-
-	int8 bypassSNA;				// [0, 1]
-
-	tresult setState(IBStream* stream);
-	tresult getState(IBStream* stream);
-};
 
 constexpr ParamValue defaultRadiusStrike = 1;
 constexpr ParamValue defaultRadiusListening = 1;
@@ -196,7 +168,7 @@ protected:
 	ParamValue noteOffVolumeRamp;
 
 	//create string with length 0.01 m
-	VSTMath::SphereEigenvalueProblem<float, 10> system{ /*.01f*/1.0f };
+	VSTMath::SphereEigenvalueProblem<float, 10, 1> system{ /*.01f*/1.0f };
 
 	bool noteoffFlag = false;
 };
@@ -378,7 +350,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 
 	// TODO: Johann: check if ramping is necessary
 	ParamValue sinusVolumeRamp = 0.;
-	
+
 	ParamValue filterFreqRamp = 0.;
 	ParamValue filterQRamp = 0.;
 	ParamValue rampTime = std::max<ParamValue>((ParamValue)numSamples, (this->sampleRate * 0.005));
@@ -453,10 +425,11 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//iterate the system and multiply with volume to make it attenuatable
 			//the listening position is at 0.7 times the string length
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
-			sample = system.next({(float)currentRadiusListening, (float)(currentThetaListening*M_PI_MUL_2),  (float)(currentPhiListening*M_PI_MUL_2) });
+			system.setFirstListeningPosition({ (float)currentRadiusListening, (float)(currentThetaListening * M_PI_MUL_2),  (float)(currentPhiListening * M_PI_MUL_2) });
+			sample = system.nextFirstChannel();
 			if (noteoffFlag) {
 				// find first zero crossing
-				if(std::abs(sample)<0.0001){
+				if (std::abs(sample) < 0.0001) {
 					system.silence();
 				}
 			}
@@ -542,7 +515,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	noteoffFlag = false;
 	system.resetTime(); // let's avoid a discontinuity at beginning
 	system.setVelocity_sq(VoiceStatics::freqTab[_pitch]);
-	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike*M_PI_MUL_2),  (float)(currentPhiStrike*M_PI_MUL_2) }, .5f);
+	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2) }, .5f);
 }
 
 //-----------------------------------------------------------------------------
@@ -590,7 +563,7 @@ void Voice<SamplePrecision>::reset()
 	currentThetaListening = this->values[kThetaListening] = 0.5;
 	currentPhiStrike = this->values[kPhiStrike] = 0.5;
 	currentPhiListening = this->values[kPhiListening] = 0.5;
-	
+
 	currentLPFreq = 1.;
 	currentLPQ = 0.;
 	filter->reset();
