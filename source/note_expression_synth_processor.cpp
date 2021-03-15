@@ -59,12 +59,14 @@ Processor::Processor () : voiceProcessor (nullptr)
 	paramState.masterTuning = 0;
 	paramState.velToLevel = 1.;
 
-	paramState.noiseVolume = 0.1;
-	paramState.sinusVolume = 1.;
-	paramState.triangleVolume = 1.;
+	paramState.radiusStrike = 1.;
+	paramState.radiusListening = 1.;
+	paramState.thetaStrike = 1.;
+	paramState.thetaListening = 1.;
+	paramState.phiStrike = 1.;
+	paramState.phiListening = 1.;
+
 	paramState.releaseTime = 0.;
-	paramState.sinusDetune = 0;
-	paramState.triangleSlop = 0.5;
 	paramState.filterFreq = 1.;
 	paramState.filterQ = 0.;
 	paramState.filterType = 0;
@@ -225,42 +227,43 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							break;
 						}
 
-						case kParamNoiseVolume:
+						case kParamRadiusStrike:
 						{
-							paramState.noiseVolume = value;
+							paramState.radiusStrike = value;
 							break;
 						}
-						case kParamSinusVolume:
+						case kParamRadiusListening:
 						{
-							paramState.sinusVolume = value;
+							paramState.radiusListening = value;
 							break;
 						}
-						case kParamTriangleVolume:
+						case kParamThetaStrike:
 						{
-							paramState.triangleVolume = value;
+							paramState.thetaStrike = value;
 							break;
 						}
-						case kParamSquareVolume:
+						case kParamThetaListening:
 						{
-							paramState.squareVolume = value;
+							paramState.thetaListening = value;
 							break;
 						}
+						case kParamPhiStrike:
+						{
+							paramState.phiStrike = value;
+							break;
+						}
+						case kParamPhiListening:
+						{
+							paramState.phiListening = value;
+							break;
+						}
+
 						case kParamReleaseTime:
 						{
 							paramState.releaseTime = value;
 							break;
 						}
-						case kParamSinusDetune:
-						{
-							paramState.sinusDetune = 2 * (value - 0.5);
-							break;
-						}
 
-						case kParamTriangleSlop:
-						{
-							paramState.triangleSlop = value;
-							break;
-						}
 						case kParamFilterType:
 						{
 							paramState.filterType = std::min<int8> (

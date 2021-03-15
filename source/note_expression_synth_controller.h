@@ -60,12 +60,13 @@ namespace NoteExpressionSynth {
 enum
 {
 	kParamReleaseTime,
-	kParamNoiseVolume,
-	kParamSinusVolume,
-	kParamTriangleVolume,
-	kParamSinusDetune,
+	kParamRadiusStrike,
+	kParamRadiusListening,
+	kParamThetaStrike,
+	kParamThetaListening,
+	kParamPhiStrike,
+	kParamPhiListening,
 	kParamBypassSNA,
-	kParamTriangleSlop,
 	kParamFilterType,
 	kParamFilterFreq,
 	kParamFilterQ,
@@ -75,7 +76,6 @@ enum
 	kParamFilterFreqModDepth,
 	kParamTuningRange,
 	kParamActiveVoices,
-	kParamSquareVolume,
 
 	kNumGlobalParameters
 };
@@ -110,17 +110,17 @@ public:
 
 	enum NoteExpressionTypeIds
 	{
-		kNoiseVolumeTypeID = kCustomStart,
+		kRadiusStrikeTypeID = kCustomStart,
+		kRadiusListeningTypeID,
+		kThetaStrikeTypeID,
+		kThetaListeningTypeID,
+		kPhiStrikeTypeID,
+		kPhiListeningTypeID,
 		kFilterFreqModTypeID,
 		kFilterQModTypeID,
-		kSinusVolumeTypeID,
-		kTriangleVolumeTypeID,
 		kFilterTypeTypeID,
-		kTriangleSlopeTypeID,
-		kSinusDetuneTypeID,
 		kReleaseTimeModTypeID,
-		kTextInputTypeID,
-		kSquareVolumeTypeID,
+		kTextInputTypeID
 	};
 
 	//--- INoteExpressionPhysicalUIMapping ------------

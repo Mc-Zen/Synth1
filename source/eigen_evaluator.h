@@ -1,4 +1,5 @@
-﻿
+﻿#pragma once 
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -165,6 +166,15 @@ public:
 		{
 			setAmplitude(i, T{ 0 });
 		}
+	}
+	// Call silence() and set time to 0
+	void reset() {
+		silence();
+		resetTime();
+	}
+	// Call silence() and set time to 0
+	void resetTime() {
+		time = 0;
 	}
 	// Get current time
 	T getTime() const { return time; }
