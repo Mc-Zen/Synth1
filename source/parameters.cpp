@@ -14,7 +14,7 @@ namespace Steinberg::Vst::NoteExpressionSynth {
 
 void GlobalParameterState::default() {
 	noiseBuffer = nullptr;
-	masterVolume = .5;
+	masterVolume = .8;
 	masterTuning = 0;
 	velToLevel = 1.;
 
@@ -26,6 +26,7 @@ void GlobalParameterState::default() {
 	phiListening = 1;
 
 	releaseTime = 0;
+	decay = 0;
 
 	filterFreq = 1;
 	filterQ = 0;
@@ -80,6 +81,9 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamReleaseTime:
 			paramState.releaseTime = value;
 			break;
+		case kParamDecay:
+			paramState.decay = value;
+			break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
 			break;
@@ -100,7 +104,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 	}
 }
 
-static uint64 currentParamStateVersion = 3;
+static uint64 currentParamStateVersion = 4;
 
 tresult GlobalParameterState::setState(IBStream* stream)
 {
@@ -151,11 +155,11 @@ tresult GlobalParameterState::setState(IBStream* stream)
 		if (!s.readInt8(tuningRange))
 			return kResultFalse;
 	}
-	//if (version >= 3)
-	//{
-	//	if (!s.readDouble (squareVolume))
-	//		return kResultFalse;
-	//}
+	if (version >= 4)
+	{
+		if (!s.readDouble (decay))
+			return kResultFalse;
+	}
 	return kResultTrue;
 }
 
@@ -206,9 +210,9 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	if (!s.writeInt8(tuningRange))
 		return kResultFalse;
 
-	//// version 3
-	//if (!s.writeDouble (squareVolume))
-	//	return kResultFalse;
+	// version 3
+	if (!s.writeDouble (decay))
+		return kResultFalse;
 
 	return kResultTrue;
 }
@@ -230,6 +234,10 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	parameters.addParameter(param);
 
 	param = new RangeParameter(USTRING("Release Time"), kParamReleaseTime, USTRING("sec"), 0.005, MAX_RELEASE_TIME_SEC, 0.025);
+	param->setPrecision(3);
+	parameters.addParameter(param);
+
+	param = new RangeParameter(USTRING("Decay"), kParamDecay, USTRING("%"), 0, 100, 0);
 	param->setPrecision(3);
 	parameters.addParameter(param);
 

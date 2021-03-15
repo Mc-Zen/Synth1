@@ -514,8 +514,8 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 
 	noteoffFlag = false;
 	system.resetTime(); // let's avoid a discontinuity at beginning
-	system.setVelocity_sq(VoiceStatics::freqTab[_pitch]);
-	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2) }, .5f);
+	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::min(-(float)this->globalParameters->decay * 5.f,0.f) });
+	system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2) }, 1.f);
 }
 
 //-----------------------------------------------------------------------------

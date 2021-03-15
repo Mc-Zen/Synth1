@@ -42,6 +42,7 @@ enum
 	kParamFilterFreqModDepth,
 	kParamTuningRange,
 	kParamActiveVoices,
+	kParamDecay,
 
 	kNumGlobalParameters
 };
@@ -63,6 +64,7 @@ struct GlobalParameterState
 	ParamValue phiListening;	// [0, +1]
 
 	ParamValue releaseTime;		// [0, +1]
+	ParamValue decay;			// [0, +1]
 
 	ParamValue filterFreq;		// [-1, +1]
 	ParamValue filterQ;			// [-1, +1]

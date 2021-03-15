@@ -160,10 +160,8 @@ public:
 	// TODO?: pinch with temporal function -> instead pass audio signal to next()
 
 	// Set all amplitudes to zero
-	void silence()
-	{
-		for (int i = 0; i < N; i++)
-		{
+	void silence() {
+		for (int i = 0; i < N; i++) {
 			setAmplitude(i, T{ 0 });
 		}
 	}
@@ -180,10 +178,10 @@ public:
 	T getTime() const { return time; }
 	// Set step time interval according to sampling rate
 	void setTimeInterval(T deltaT) { this->deltaT = deltaT; }
-	void setVelocity_sq(T v_sq) {
+	void setVelocity_sq(complex<T> v_sq) {
 		velocity_sq = v_sq;
 	}
-	T getVelocity_sq(T v) {
+	complex<T> getVelocity_sq() {
 		return velocity_sq;
 	}
 
@@ -222,7 +220,7 @@ private:
 		return k_sq * velocity_sq;
 	}*/
 
-	T velocity_sq = 1;
+	complex<T> velocity_sq = 1;
 };
 
 /*
