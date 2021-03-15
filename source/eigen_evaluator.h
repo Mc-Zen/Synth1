@@ -254,6 +254,12 @@ public:
 		return evaluate(this->getTime());
 	}
 
+	// Same but with external audio input
+	array<T, numChannels> next(const Vector<T, d> strikePosition, T amplitudeIn)
+	{
+		this->pinchDelta(strikePosition, amplitudeIn);
+		return next();
+	}
 	T nextFirstChannel() {
 		evolve(this->deltaT);
 		return evaluateFirstChannel(this->getTime());

@@ -66,6 +66,7 @@ public:
 	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
+	tresult PLUGIN_API processAudio(ProcessData& data);
 
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
 

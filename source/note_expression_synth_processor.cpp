@@ -41,6 +41,9 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include <algorithm>
 #include "parameters.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "public.sdk/source/vst/vstaudioprocessoralgo.h" // getChannelBuffersPointer()
+
 
 namespace Steinberg {
 namespace Vst {
@@ -65,6 +68,7 @@ tresult PLUGIN_API Processor::initialize(FUnknown* context)
 	tresult result = AudioEffect::initialize(context);
 	if (result == kResultTrue)
 	{
+		addAudioInput(STR16("AudioInput"), Vst::SpeakerArr::kStereo);
 		addAudioOutput(STR16("Audio Output"), SpeakerArr::kStereo);
 		addEventInput(STR16("Event Input"), 1);
 	}
@@ -153,6 +157,9 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 		}
 
 		globalSystem.setTimeInterval(1.0f / (float)processSetup.sampleRate);
+		globalSystem.setFirstListeningPosition({ .2,.1,.34 });
+		voiceProcessor->clearOutputNeeded(false);
+		globalSystem.setVelocity_sq({ 1,1 });
 	}
 	else
 	{
@@ -174,7 +181,7 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 tresult PLUGIN_API Processor::process(ProcessData& data)
 {
 	// TODO: maybe try to make this nearly sample accurate
-	if (data.inputParameterChanges)
+	/*if (data.inputParameterChanges)
 	{
 		int32 count = data.inputParameterChanges->getParameterCount();
 		for (int32 i = 0; i < count; i++)
@@ -186,35 +193,92 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 			}
 		}
 	}
-	tresult result;
+	tresult result = kResultTrue;
 	Event evt;
 	while (controllerEvents.pop(evt))
 	{
 		voiceProcessor->processEvent(evt);
-	}
+	}*/
 
+	processAudio(data);
+	return kResultTrue;
+	// initialize audio output buffers
+	/*if (data.numOutputs < 1)
+		result = kResultTrue;
+	/*
 	// flush mode
 	if (data.numOutputs < 1)
 		result = kResultTrue;
 	else
-		result = voiceProcessor->process(data);
-	if (result == kResultTrue)
-	{
-		if (data.outputParameterChanges)
+		result = voiceProcessor->process(data);*/
+		/*if (result == kResultTrue)
 		{
-			int32 index;
-			IParamValueQueue* queue = data.outputParameterChanges->addParameterData(kParamActiveVoices, index);
-			if (queue)
+			if (data.outputParameterChanges)
 			{
-				queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
+				int32 index;
+				IParamValueQueue* queue = data.outputParameterChanges->addParameterData(kParamActiveVoices, index);
+				if (queue)
+				{
+					queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
+				}
 			}
+			if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
+			{
+				data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
+			}
+		}*/
+		//return result;
+}
+
+tresult PLUGIN_API Processor::processAudio(ProcessData& data)
+{
+
+	if (data.numInputs == 0 || data.numOutputs == 0)
+	{
+		return kResultOk; // nothing to do
+	}
+
+	// Wie viele Kanäle? 2 für Stereo, 1 für Mono. 
+	int32 numChannels = data.inputs[0].numChannels;
+
+	// Wie viele Bytes an Daten enthält der Buffer?
+	uint32 sampleFramesSize = getSampleFramesSizeInBytes(processSetup, data.numSamples);
+	void** in = getChannelBuffersPointer(processSetup, data.inputs[0]);
+	void** out = getChannelBuffersPointer(processSetup, data.outputs[0]);
+
+	// Die Silence-Flags dienen nur der Optimierung. Man kann CPU sparen, wenn kein Signal anliegt
+	{
+		if (data.inputs[0].silenceFlags != 0) {
+			data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
+
+			for (int32 i = 0; i < numChannels; ++i) {
+				if (in[i] != out[i]) {
+					memset(out[i], 0, sampleFramesSize);
+				}
+			}
+			return kResultOk;
 		}
-		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
-		{
-			data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
+		data.outputs[0].silenceFlags = 0;
+	}
+
+
+	// Gehe durch alle Kanäle durch (Erinnerung: 2 für Stereo-Signal)
+	for (int32 i = 0; i < numChannels; i++) {
+		int32 samples = data.numSamples;	 // Wie viele Samples hat der Buffer?
+		Sample32* ptrIn = (Sample32*)in[i];
+		Sample32* ptrOut = (Sample32*)out[i];
+		Sample32 tmp;
+
+		// Gehe durch alle Samples durch und multipliziere den Wert mit dem gain-Faktor
+		while (--samples >= 0) {
+			tmp = (*ptrIn++);
+
+			tmp = globalSystem.next({ .2,.2,.2 }, tmp)[0];
+
+			(*ptrOut++) = tmp;
 		}
 	}
-	return result;
+	return kResultOk;
 }
 } // NoteExpressionSynth
 } // Vst

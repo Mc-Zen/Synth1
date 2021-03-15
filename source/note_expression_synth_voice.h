@@ -173,7 +173,7 @@ protected:
 	VSTMath::Vector<type, maxDimension> listenerPosition{};
 
 	//create string with length 0.01 m
-	VSTMath::SphereEigenvalueProblem<type, 10, 1> system;
+	VSTMath::SphereEigenvalueProblem<type, 5, 1> system;
 
 	type strikeAmount = 1.f;
 	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
