@@ -52,25 +52,22 @@ namespace NoteExpressionSynth {
  */
 class GlobalPhysicalSystemWrapper {
 public:
-	VSTMath::SphereEigenvalueProblem<float, 10, 1> system;
+	VSTMath::CubeEigenvalueProblem<float, 4, 7, 1> system;
 	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
 
 
 	void init(float sampleRate) {
 		system.setSampleRate(sampleRate);
-		system.setFirstListeningPosition({ .2,.1,.34 });
-		system.setStrikingPosition({ .8,.6,.09 });
-		system.setVelocity_sq({ 1,1 });
+		system.setVelocity_sq({ 100,1 });
 		filter.setSampleRate(sampleRate);
 		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
-		
 	}
 
 	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
-		system.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] });
+		system.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
 	}
 	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
-		system.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2] });
+		system.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
 	}
 };
 

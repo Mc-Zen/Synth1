@@ -276,7 +276,9 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		data.outputs[0].silenceFlags = 0;
 	}
 
-	
+
+	systemWrapper.system.setVelocity_sq({ (float)paramState.X[9] * 1000,(float)paramState.decay * 5 });
+
 
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
 	Sample32* sIn;
