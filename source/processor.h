@@ -48,26 +48,40 @@ namespace NoteExpressionSynth {
 
 
 /*
- * Wrapper class for a global eigenvalue problem system. 
+ * Wrapper class for a global eigenvalue problem system.
  */
 class GlobalPhysicalSystemWrapper {
 public:
-	VSTMath::CubeEigenvalueProblem<float, 4, 7, 1> system;
+	GlobalPhysicalSystemWrapper() {
+		system = &sphere;
+	}
+
+	enum class Object {
+		Sphere, Cube
+	};
+
+	using type = float;
+	static constexpr int k = 7;
+	static constexpr int numChannels = 1;
+	static constexpr int dim = 3;
+	VSTMath::CubeEigenvalueProblem<type, dim, k, numChannels> cube;
+	VSTMath::SphereEigenvalueProblem<type, k, numChannels> sphere;
 	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
 
+	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* system;
 
 	void init(float sampleRate) {
-		system.setSampleRate(sampleRate);
-		system.setVelocity_sq({ 100,1 });
+		system->setSampleRate(sampleRate);
+		system->setVelocity_sq({ 100,1 });
 		filter.setSampleRate(sampleRate);
 		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
 	}
 
 	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
-		system.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		system->setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
 	}
 	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
-		system.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+		system->setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
 	}
 };
 
@@ -81,34 +95,36 @@ public:
 class Processor : public AudioEffect
 {
 public:
-	Processor ();
-	
-	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
-	tresult PLUGIN_API setBusArrangements (SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts) SMTG_OVERRIDE;
+	Processor();
 
-	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
-	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
+	tresult PLUGIN_API initialize(FUnknown* context) SMTG_OVERRIDE;
+	tresult PLUGIN_API setBusArrangements(SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts) SMTG_OVERRIDE;
 
-	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
-	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
-	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
+	tresult PLUGIN_API setState(IBStream* state) SMTG_OVERRIDE;
+	tresult PLUGIN_API getState(IBStream* state) SMTG_OVERRIDE;
+
+	tresult PLUGIN_API canProcessSampleSize(int32 symbolicSampleSize) SMTG_OVERRIDE;
+	tresult PLUGIN_API setActive(TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API process(ProcessData& data) SMTG_OVERRIDE;
 	tresult PLUGIN_API processAudio(ProcessData& data);
 	void listeningPositionChanged();
 	void strikingPositionChanged();
 
-	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
+	tresult PLUGIN_API notify(IMessage* message) SMTG_OVERRIDE;
 
-	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new Processor (); }
+	static FUnknown* createInstance(void*) { return (IAudioProcessor*)new Processor(); }
 
 	static FUID cid;
 protected:
 	VoiceProcessor* voiceProcessor;
 	GlobalParameterState paramState;
-	OneReaderOneWriter::RingBuffer<Event> controllerEvents {16};
+	OneReaderOneWriter::RingBuffer<Event> controllerEvents{ 16 };
 
 	//VSTMath::SphereEigenvalueProblem<float, maxDimension, 1> globalSystem;
 	GlobalPhysicalSystemWrapper systemWrapper;
 };
 
 
-}}} // namespaces
+}
+}
+} // namespaces

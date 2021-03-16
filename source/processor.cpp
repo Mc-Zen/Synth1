@@ -277,7 +277,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	}
 
 
-	systemWrapper.system.setVelocity_sq({ (float)paramState.size * 1000,(float)paramState.decay * 5 });
+	systemWrapper.system->setVelocity_sq({ (float)paramState.size * 1000,(float)paramState.decay * 5 });
 
 
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
@@ -287,7 +287,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 
 		// First channel is send into system
 		sIn = (Sample32*)in[0] + i;
-		float tmp = systemWrapper.system.next(*sIn)[0];
+		float tmp = systemWrapper.system->next(*sIn)[0];
 		tmp = (Sample32)systemWrapper.filter.process(tmp);
 
 

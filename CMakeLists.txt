@@ -4,14 +4,16 @@ if(SMTG_ADD_VSTGUI)
         source/brownnoise.h
         source/factory.cpp
         source/filter.h
-        source/note_expression_synth_controller.cpp
-        source/note_expression_synth_controller.h
-        source/note_expression_synth_processor.cpp
-        source/note_expression_synth_processor.h
-        source/note_expression_synth_ui.cpp
-        source/note_expression_synth_ui.h
-        source/note_expression_synth_voice.cpp
-        source/note_expression_synth_voice.h
+        source/controller.cpp
+        source/controller.h
+        source/processor.cpp
+        source/processor.h
+        source/parameters.cpp
+        source/parameters.h
+        source/ui.cpp
+        source/ui.h
+        source/voice.cpp
+        source/voice.h
         source/note_touch_controller.cpp
         source/note_touch_controller.h
         source/version.h
@@ -36,6 +38,7 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "resource/knob2.png")
     smtg_add_vst3_resource(${target} "resource/knob big.png")
     smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
+    smtg_add_vst3_resource(${target} "resource/studstift_logo.png")
     
     smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot.png")
     smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot_2.0x.png")
@@ -72,6 +75,7 @@ if(SMTG_ADD_VSTGUI)
         smtg_add_vst3_resource(${target} "resource/knob2.png")
         smtg_add_vst3_resource(${target} "resource/knob big.png")
         smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
+        smtg_add_vst3_resource(${target} "resource/studstift_logo.png")
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
         target_sources(${target} PRIVATE 
             "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp"

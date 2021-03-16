@@ -265,7 +265,7 @@ public:
 	// "Pinch" at the system with delta peak.
 	void pinchDelta(T amount) {
 		for (int i = 0; i < N; i++) {
-			setAmplitude(i, amplitude(i) + eigenFunctionEvaluation_strike[i] * amount);
+			setAmplitude(i, this->amplitude(i) + eigenFunctionEvaluation_strike[i] * amount);
 		}
 	}
 
@@ -447,11 +447,11 @@ protected:
 
 	*/
 	void computeEigenvalues_and_ks() {
-		int r = getRApprox(d, N);
+		int r = getRApprox();
 		std::vector<Vector<T, d + 1>> kvecs;
 
 		int maxNumEigenvalues = std::pow(r + 1, d);
-		if (maxNumEigenvalues < N) throw std::exception("r<N");
+		//if (maxNumEigenvalues < N) throw std::exception("r<N");
 
 		for (int i = 0; i < maxNumEigenvalues; ++i) {
 			Vector<T, d + 1> kvec{}; // last entry sums up the squares of the other entries
@@ -489,7 +489,7 @@ protected:
 	1111
 
 	*/
-	int getRApprox(int d, int N) {
+	int getRApprox() {
 		// N =!  V_sphere / 2^d
 		// with
 		//       | π^(d/2) r^d /(d/2)!               even d
