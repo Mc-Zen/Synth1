@@ -277,7 +277,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	}
 
 
-	systemWrapper.system.setVelocity_sq({ (float)paramState.X[9] * 1000,(float)paramState.decay * 5 });
+	systemWrapper.system.setVelocity_sq({ (float)paramState.size * 1000,(float)paramState.decay * 5 });
 
 
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?

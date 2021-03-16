@@ -87,6 +87,8 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 			paramState.releaseTime = value; break;
 		case kParamDecay:
 			paramState.decay = value; break;
+		case kParamSize:
+			paramState.size = value; break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
@@ -184,6 +186,9 @@ tresult GlobalParameterState::setState(IBStream* stream)
 		if (!s.readDouble(Y[7])) return kResultFalse;
 		if (!s.readDouble(Y[8])) return kResultFalse;
 		if (!s.readDouble(Y[9])) return kResultFalse;
+
+		if (!s.readDouble(size))
+			return kResultFalse;
 	}
 	return kResultTrue;
 }
@@ -265,6 +270,9 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	if (!s.writeDouble(Y[8])) return kResultFalse;
 	if (!s.writeDouble(Y[9])) return kResultFalse;
 
+	if (!s.writeDouble(size))
+		return kResultFalse;
+
 	return kResultTrue;
 }
 
@@ -289,29 +297,30 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 
 	addRangeParameter("Decay", Params::kParamDecay, "%", 0, 100, 80, 1);
 
-	addRangeParameter("X0", Params::kParamX0, "%", 0, 100, 20, 1);
-	addRangeParameter("X1", Params::kParamX1, "%", 0, 100, 20, 1);
-	addRangeParameter("X2", Params::kParamX2, "%", 0, 100, 20, 1);
-	addRangeParameter("X3", Params::kParamX3, "%", 0, 100, 20, 1);
-	addRangeParameter("X4", Params::kParamX4, "%", 0, 100, 20, 1);
-	addRangeParameter("X5", Params::kParamX5, "%", 0, 100, 20, 1);
-	addRangeParameter("X6", Params::kParamX6, "%", 0, 100, 20, 1);
-	addRangeParameter("X7", Params::kParamX7, "%", 0, 100, 20, 1);
-	addRangeParameter("X8", Params::kParamX8, "%", 0, 100, 20, 1);
-	addRangeParameter("X9", Params::kParamX9, "%", 0, 100, 20, 1);
+	addRangeParameter("X0", Params::kParamX0, "%", 0, 100, 20, 0);
+	addRangeParameter("X1", Params::kParamX1, "%", 0, 100, 20, 0);
+	addRangeParameter("X2", Params::kParamX2, "%", 0, 100, 20, 0);
+	addRangeParameter("X3", Params::kParamX3, "%", 0, 100, 20, 0);
+	addRangeParameter("X4", Params::kParamX4, "%", 0, 100, 20, 0);
+	addRangeParameter("X5", Params::kParamX5, "%", 0, 100, 20, 0);
+	addRangeParameter("X6", Params::kParamX6, "%", 0, 100, 20, 0);
+	addRangeParameter("X7", Params::kParamX7, "%", 0, 100, 20, 0);
+	addRangeParameter("X8", Params::kParamX8, "%", 0, 100, 20, 0);
+	addRangeParameter("X9", Params::kParamX9, "%", 0, 100, 20, 0);
 
-	addRangeParameter("Y0", Params::kParamY0, "%", 0, 100, 20, 1);
-	addRangeParameter("Y1", Params::kParamY1, "%", 0, 100, 20, 1);
-	addRangeParameter("Y2", Params::kParamY2, "%", 0, 100, 20, 1);
-	addRangeParameter("Y3", Params::kParamY3, "%", 0, 100, 20, 1);
-	addRangeParameter("Y4", Params::kParamY4, "%", 0, 100, 20, 1);
-	addRangeParameter("Y5", Params::kParamY5, "%", 0, 100, 20, 1);
-	addRangeParameter("Y6", Params::kParamY6, "%", 0, 100, 20, 1);
-	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 20, 1);
-	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 20, 1);
-	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 1);
+	addRangeParameter("Y0", Params::kParamY0, "%", 0, 100, 20, 0);
+	addRangeParameter("Y1", Params::kParamY1, "%", 0, 100, 20, 0);
+	addRangeParameter("Y2", Params::kParamY2, "%", 0, 100, 20, 0);
+	addRangeParameter("Y3", Params::kParamY3, "%", 0, 100, 20, 0);
+	addRangeParameter("Y4", Params::kParamY4, "%", 0, 100, 20, 0);
+	addRangeParameter("Y5", Params::kParamY5, "%", 0, 100, 20, 0);
+	addRangeParameter("Y6", Params::kParamY6, "%", 0, 100, 20, 0);
+	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 20, 0);
+	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 20, 0);
+	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 0);
 	
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
+	addRangeParameter("Size", Params::kParamSize, "%", 0, 100, 0, 1);
 
 
 

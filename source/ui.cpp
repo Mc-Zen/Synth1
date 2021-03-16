@@ -382,7 +382,7 @@ enum
 {
 	kParamMIDILearn = kNumGlobalParameters,
 	kParamEnableMPE
-};
+}; 
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API ControllerWithUI::initialize (FUnknown* context)

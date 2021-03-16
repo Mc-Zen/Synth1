@@ -66,6 +66,7 @@ enum Params : Steinberg::Vst::ParamID
 	kParamY9,
 
 	kParamAngle,
+	kParamSize,
 
 	kNumGlobalParameters
 };
@@ -89,6 +90,7 @@ struct GlobalParameterState
 
 	ParamValue releaseTime;		// [0, +1]
 	ParamValue decay;			// [0, +1]
+	ParamValue size;			// [0, +1]
 
 	ParamValue filterFreq;		// [-1, +1]
 	ParamValue filterQ;			// [-1, +1]
