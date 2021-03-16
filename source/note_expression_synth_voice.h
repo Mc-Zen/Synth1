@@ -437,7 +437,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 
 			const auto& pos = listenerPosition;
 			constexpr type twopi = 2 * VSTMath::pi<type>();
-			system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
+			//system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
 			sample = 10 * system.nextFirstChannel();
 
 
@@ -540,9 +540,12 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)this->globalParameters->decay * 5.f,0.f) });
 	//system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2),.4 }, 1.f);
 
-	const auto& pos = listenerPosition;
+	const auto& pos_lis = listenerPosition;
+	const auto& pos_str = strikePosition;
 	constexpr type twopi = 2 * VSTMath::pi<type>();
-	system.pinchDelta({ pos[0],twopi * pos[1],twopi * pos[2] }, strikeAmount);
+	system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
+	system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
+	system.pinchDelta(strikeAmount);
 }
 
 //-----------------------------------------------------------------------------

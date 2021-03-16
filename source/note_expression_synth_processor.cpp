@@ -158,6 +158,7 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 
 		globalSystem.setTimeInterval(1.0f / (float)processSetup.sampleRate);
 		globalSystem.setFirstListeningPosition({ .2,.1,.34 });
+		globalSystem.setStrikingPosition({ .2,.1,.34 });
 		voiceProcessor->clearOutputNeeded(false);
 		globalSystem.setVelocity_sq({ 1,1 });
 	}
@@ -273,7 +274,8 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		while (--samples >= 0) {
 			tmp = (*ptrIn++);
 
-			tmp = globalSystem.next({ .2,.2,.2 }, tmp)[0];
+			tmp = globalSystem.next(tmp)[0];
+			//tmp = globalSystem.next({ .2,.2,.2 }, tmp)[0];
 
 			(*ptrOut++) = tmp;
 		}

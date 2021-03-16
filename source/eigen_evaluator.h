@@ -246,7 +246,19 @@ public:
 		for (int j = 0; j < N; ++j) {
 			eigenFunctionEvaluations[0][j] = eigenFunction(j, listeningPosition[0]);
 		}
+	}
 
+	void setStrikingPosition(const Vector<T, d> strikingPosition) {
+		for (int j = 0; j < N; ++j) {
+			eigenFunctionEvaluation_strike[j] = eigenFunction(j, strikingPosition);
+		}
+	}
+
+	// "Pinch" at the system with delta peak.
+	void pinchDelta(T amount) {
+		for (int i = 0; i < N; i++) {
+			setAmplitude(i, amplitude(i) + eigenFunctionEvaluation_strike[i] * amount);
+		}
 	}
 
 	array<T, numChannels> next() {
@@ -255,11 +267,12 @@ public:
 	}
 
 	// Same but with external audio input
-	array<T, numChannels> next(const Vector<T, d> strikePosition, T amplitudeIn)
+	array<T, numChannels> next(T amplitudeIn)
 	{
-		this->pinchDelta(strikePosition, amplitudeIn);
+		this->pinchDelta(amplitudeIn);
 		return next();
 	}
+
 	T nextFirstChannel() {
 		evolve(this->deltaT);
 		return evaluateFirstChannel(this->getTime());
@@ -287,6 +300,7 @@ protected:
 private:
 	// Eigenfunctions evaluated at the listening positions last set through setListeningPositions()
 	array<array<complex<T>, N>, numChannels> eigenFunctionEvaluations;
+	array<complex<T>, N> eigenFunctionEvaluation_strike;
 
 };
 
