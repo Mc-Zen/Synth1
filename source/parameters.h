@@ -5,6 +5,7 @@
 #include "pluginterfaces/base/ustring.h"
 #include "public.sdk/source/vst/vstparameters.h"
 #include "brownnoise.h"
+#include <array>
 #define MAX_VOICES				64
 #define MAX_RELEASE_TIME_SEC	5.0
 #define NUM_FILTER_TYPE			3
@@ -20,18 +21,15 @@ class IParamValueQueue;
 }
 namespace Steinberg::Vst::NoteExpressionSynth {
 
+constexpr int maxDimension = 10;
 //-----------------------------------------------------------------------------
 // Global Parameters
 //-----------------------------------------------------------------------------
-enum
+enum Params : Steinberg::Vst::ParamID
 {
+	kBypass,
 	kParamReleaseTime,
-	kParamRadiusStrike,
-	kParamRadiusListening,
-	kParamThetaStrike,
-	kParamThetaListening,
-	kParamPhiStrike,
-	kParamPhiListening,
+	kParamDecay,
 	kParamBypassSNA,
 	kParamFilterType,
 	kParamFilterFreq,
@@ -42,7 +40,30 @@ enum
 	kParamFilterFreqModDepth,
 	kParamTuningRange,
 	kParamActiveVoices,
-	kParamDecay,
+
+	kParamX0,
+	kParamX1,
+	kParamX2,
+	kParamX3,
+	kParamX4,
+	kParamX5,
+	kParamX6,
+	kParamX7,
+	kParamX8,
+	kParamX9,
+
+	kParamY0,
+	kParamY1,
+	kParamY2,
+	kParamY3,
+	kParamY4,
+	kParamY5,
+	kParamY6,
+	kParamY7,
+	kParamY8,
+	kParamY9,
+
+	kParamAngle,
 
 	kNumGlobalParameters
 };
@@ -50,6 +71,7 @@ enum
 // Global Parameters state as stored by Processor
 struct GlobalParameterState
 {
+	bool bypass = false;
 	BrownNoise<float>* noiseBuffer;
 
 	ParamValue masterVolume;	// [0, +1]
@@ -74,6 +96,11 @@ struct GlobalParameterState
 	int8 tuningRange;			// [0, 1]
 
 	int8 bypassSNA;				// [0, 1]
+
+
+	// All from [0, 1]
+	std::array<ParamValue, maxDimension> X; // input (striking) position in #N D
+	std::array<ParamValue, maxDimension> Y; // output (listening) position in #N D
 
 	tresult setState(IBStream* stream);
 	tresult getState(IBStream* stream);

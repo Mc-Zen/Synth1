@@ -119,7 +119,73 @@ public:
 
 };
 
+
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+class PhysicalSystemWrapper {
+public:
+
+	using type = float;
+	VSTMath::Vector<type, maxDimension> strikePosition{};
+	VSTMath::Vector<type, maxDimension> listenerPosition{};
+
+	VSTMath::SphereEigenvalueProblem<type, 5, 1> system;
+
+	type strikeAmount = 1.f;
+	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
+
+
+	void reset() {
+		system.silence();
+		noteoffFlag = false;
+	}
+
+	void setSampleRate(ParamValue sampleRate) {
+		system.setSampleRate((float)sampleRate);
+	}
+
+	void noteOn(int32 _pitch, ParamValue velocity, float _tuning, int32 sampleOffset, int32 nId, const GlobalParameterState* gps) {
+		noteoffFlag = false;
+		system.resetTime(); // let's avoid a discontinuity at beginning
+		system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)gps->decay * 5.f,0.f) });
+
+		const auto& pos_lis = listenerPosition;
+		const auto& pos_str = strikePosition;
+		constexpr type twopi = 2 * VSTMath::pi<type>();
+		system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
+		system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
+		system.pinchDelta(strikeAmount);
+		FDebugPrint("NNOTEToteOn :%d\n", nId);
+	}
+
+	void noteOff(ParamValue velocity, int32 sampleOffset) {
+
+		//when note is off, set flag that system should be silenced at next zero crossing
+		noteoffFlag = true;
+	}
+
+	type nextFirstChannel() {
+		type sample = system.nextFirstChannel();
+		if (noteoffFlag) {
+			// find first zero crossing
+			if (std::abs(sample) < 0.0001) {
+				system.silence();
+			}
+		}
+		return sample;
+	}
+
+private:
+
+	bool noteoffFlag = false;
+};
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
 /** Example Note Expression Synth Voice Class
 
 \sa Steinberg::Vst::VoiceBase
@@ -167,8 +233,7 @@ protected:
 	ParamValue levelFromVel;
 	ParamValue noteOffVolumeRamp;
 
-	static constexpr int maxDimension = 3;
-	using type = float;
+	/*using type = float;
 	VSTMath::Vector<type, maxDimension> strikePosition{};
 	VSTMath::Vector<type, maxDimension> listenerPosition{};
 
@@ -178,8 +243,10 @@ protected:
 	type strikeAmount = 1.f;
 	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
 
-	bool noteoffFlag = false;
+	bool noteoffFlag = false;*/
+	PhysicalSystemWrapper systemWrapper;
 };
+
 
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
@@ -364,33 +431,27 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 	ParamValue rampTime = std::max<ParamValue>((ParamValue)numSamples, (this->sampleRate * 0.005));
 
 	ParamValue wantedVolume = VoiceStatics::normalizedLevel2Gain((float)Bound(0.0, 1.0, this->globalParameters->masterVolume * levelFromVel + this->values[kVolumeMod]));
-	if (wantedVolume != currentVolume)
-	{
+	if (wantedVolume != currentVolume){
 		volumeRamp = (wantedVolume - currentVolume) / rampTime;
 	}
 
 	if (this->values[kPanningLeft] != currentPanningLeft)
-	{
 		panningLeftRamp = (this->values[kPanningLeft] - currentPanningLeft) / rampTime;
-	}
+	
 	if (this->values[kPanningRight] != currentPanningRight)
-	{
 		panningRightRamp = (this->values[kPanningRight] - currentPanningRight) / rampTime;
-	}
+	
 	if (this->values[kRadiusStrike] != currentRadiusStrike)
-	{
 		sinusVolumeRamp = (this->values[kRadiusStrike] - currentRadiusStrike) / rampTime;
-	}
+	
 
 
 	ParamValue wantedLPFreq = Bound(0., 1., this->globalParameters->filterFreq + this->globalParameters->freqModDepth * this->values[kFilterFrequencyMod]);
-	if (wantedLPFreq != currentLPFreq)
-	{
+	if (wantedLPFreq != currentLPFreq) {
 		filterFreqRamp = (wantedLPFreq - currentLPFreq) / rampTime;
 	}
 	ParamValue wantedLPQ = Bound(0., 1., this->globalParameters->filterQ + this->values[kFilterQMod]);
-	if (wantedLPQ != currentLPQ)
-	{
+	if (wantedLPQ != currentLPQ){
 		filterQRamp = (wantedLPQ - currentLPQ) / rampTime;
 	}
 
@@ -435,18 +496,19 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
 			//system.setFirstListeningPosition({ (float)currentRadiusListening, (float)(currentThetaListening * M_PI_MUL_2),  (float)(currentPhiListening * M_PI_MUL_2) ,.5 });
 
-			const auto& pos = listenerPosition;
-			constexpr type twopi = 2 * VSTMath::pi<type>();
+			//const auto& pos = listenerPosition;
+			//constexpr type twopi = 2 * VSTMath::pi<type>();
 			//system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
-			sample = 10 * system.nextFirstChannel();
+			//sample = 10 * system.nextFirstChannel();
 
+			sample = 10 * systemWrapper.nextFirstChannel();
 
-			if (noteoffFlag) {
+			/*if (noteoffFlag) {
 				// find first zero crossing
 				if (std::abs(sample) < 0.0001) {
 					system.silence();
 				}
-			}
+			}*/
 
 			n++;
 
@@ -503,17 +565,12 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	currentThetaListening = this->values[kThetaListening] = this->globalParameters->thetaListening;
 	currentPhiStrike = this->values[kPhiStrike] = this->globalParameters->phiStrike;
 	currentPhiListening = this->values[kPhiListening] = this->globalParameters->phiListening;
-	strikePosition = {
-		(type)(this->globalParameters->radiusStrike) ,
-		(type)(this->globalParameters->thetaStrike) ,
-		(type)(this->globalParameters->phiStrike)
-	};
-	listenerPosition = {
-		(type)(this->globalParameters->radiusListening) ,
-		(type)(this->globalParameters->thetaListening) ,
-		(type)(this->globalParameters->phiListening)
-	};
+	
 
+	for (int i = 0; i < maxDimension; i++) {
+		systemWrapper.strikePosition[i] = this->globalParameters->X[i];
+		systemWrapper.listenerPosition[i] = this->globalParameters->Y[i];
+	}
 	// filter setting
 	currentLPFreq = this->globalParameters->filterFreq;
 	this->values[kFilterFrequencyMod] = 0;
@@ -535,17 +592,19 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	this->noteOnSampleOffset++;
 
 
-	noteoffFlag = false;
+
+	/*noteoffFlag = false;
 	system.resetTime(); // let's avoid a discontinuity at beginning
 	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)this->globalParameters->decay * 5.f,0.f) });
-	//system.pinchDelta({ (float)currentRadiusStrike, (float)(currentThetaStrike * M_PI_MUL_2),  (float)(currentPhiStrike * M_PI_MUL_2),.4 }, 1.f);
 
 	const auto& pos_lis = listenerPosition;
 	const auto& pos_str = strikePosition;
 	constexpr type twopi = 2 * VSTMath::pi<type>();
 	system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
 	system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
-	system.pinchDelta(strikeAmount);
+	system.pinchDelta(strikeAmount);*/
+
+	systemWrapper.noteOn(_pitch, velocity, _tuning, sampleOffset, nId, this->globalParameters);
 }
 
 //-----------------------------------------------------------------------------
@@ -566,7 +625,8 @@ void Voice<SamplePrecision>::noteOff(ParamValue velocity, int32 sampleOffset)
 		noteOffVolumeRamp *= currentVolume;
 
 	//when note is off, set flag that system should be silenced at next zero crossing
-	noteoffFlag = true;
+	//noteoffFlag = true;
+	systemWrapper.noteOff(velocity, sampleOffset);
 }
 
 //-----------------------------------------------------------------------------
@@ -599,8 +659,9 @@ void Voice<SamplePrecision>::reset()
 	noteOffVolumeRamp = 0.005;
 
 	//when voice is reset, silence the string
-	system.silence();
-	noteoffFlag = false;
+	/*system.silence();
+	noteoffFlag = false;*/
+	systemWrapper.reset();
 
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset();
 }
@@ -613,7 +674,8 @@ void Voice<SamplePrecision>::setSampleRate(ParamValue _sampleRate)
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate(_sampleRate);
 
 	//set sample rate of string
-	system.setTimeInterval(1.0f / _sampleRate);
+	//system.setSampleRate( _sampleRate);
+	systemWrapper.setSampleRate( _sampleRate);
 }
 
 //-----------------------------------------------------------------------------

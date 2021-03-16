@@ -156,7 +156,7 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 			}
 		}
 
-		globalSystem.setTimeInterval(1.0f / (float)processSetup.sampleRate);
+		globalSystem.setSampleRate((float)processSetup.sampleRate);
 		globalSystem.setFirstListeningPosition({ .2,.1,.34 });
 		globalSystem.setStrikingPosition({ .2,.1,.34 });
 		voiceProcessor->clearOutputNeeded(false);
@@ -182,7 +182,7 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 tresult PLUGIN_API Processor::process(ProcessData& data)
 {
 	// TODO: maybe try to make this nearly sample accurate
-	/*if (data.inputParameterChanges)
+	if (data.inputParameterChanges)
 	{
 		int32 count = data.inputParameterChanges->getParameterCount();
 		for (int32 i = 0; i < count; i++)
@@ -199,36 +199,35 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 	while (controllerEvents.pop(evt))
 	{
 		voiceProcessor->processEvent(evt);
-	}*/
+	}
 
-	processAudio(data);
-	return kResultTrue;
+	tresult resultAudio = processAudio(data);
 	// initialize audio output buffers
-	/*if (data.numOutputs < 1)
+	if (data.numOutputs < 1)
 		result = kResultTrue;
-	/*
+
 	// flush mode
 	if (data.numOutputs < 1)
 		result = kResultTrue;
 	else
-		result = voiceProcessor->process(data);*/
-		/*if (result == kResultTrue)
+		result = voiceProcessor->process(data);
+	if (result == kResultTrue)
+	{
+		if (data.outputParameterChanges)
 		{
-			if (data.outputParameterChanges)
+			int32 index;
+			IParamValueQueue* queue = data.outputParameterChanges->addParameterData(kParamActiveVoices, index);
+			if (queue)
 			{
-				int32 index;
-				IParamValueQueue* queue = data.outputParameterChanges->addParameterData(kParamActiveVoices, index);
-				if (queue)
-				{
-					queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
-				}
+				queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
 			}
-			if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
-			{
-				data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
-			}
-		}*/
-		//return result;
+		}
+		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
+		{
+			data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
+		}
+	}
+	return result && resultAudio;
 }
 
 tresult PLUGIN_API Processor::processAudio(ProcessData& data)
@@ -239,6 +238,8 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		return kResultOk; // nothing to do
 	}
 
+
+
 	// Wie viele Kanäle? 2 für Stereo, 1 für Mono. 
 	int32 numChannels = data.inputs[0].numChannels;
 
@@ -246,6 +247,16 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	uint32 sampleFramesSize = getSampleFramesSizeInBytes(processSetup, data.numSamples);
 	void** in = getChannelBuffersPointer(processSetup, data.inputs[0]);
 	void** out = getChannelBuffersPointer(processSetup, data.outputs[0]);
+
+	// Implement true bypass
+	if (paramState.bypass) {
+		for (int32 i = 0; i < numChannels; ++i) {
+			if (in[i] != out[i]) {
+				memcpy(out[i], in[i], sampleFramesSize);
+			}
+		}
+		return kResultOk;
+	}
 
 	// Die Silence-Flags dienen nur der Optimierung. Man kann CPU sparen, wenn kein Signal anliegt
 	{
@@ -263,21 +274,22 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	}
 
 
-	// Gehe durch alle Kanäle durch (Erinnerung: 2 für Stereo-Signal)
-	for (int32 i = 0; i < numChannels; i++) {
-		int32 samples = data.numSamples;	 // Wie viele Samples hat der Buffer?
-		Sample32* ptrIn = (Sample32*)in[i];
-		Sample32* ptrOut = (Sample32*)out[i];
-		Sample32 tmp;
 
-		// Gehe durch alle Samples durch und multipliziere den Wert mit dem gain-Faktor
-		while (--samples >= 0) {
-			tmp = (*ptrIn++);
+	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
+	Sample32* sIn;
+	Sample32* sOut;
+	for (int32 i = 0; i < numSamples; i++) {
 
-			tmp = globalSystem.next(tmp)[0];
-			//tmp = globalSystem.next({ .2,.2,.2 }, tmp)[0];
+		// First channel is send into system
+		sIn = (Sample32*)in[0] + i;
+		float tmp = globalSystem.next(*sIn)[0];
 
-			(*ptrOut++) = tmp;
+		// response of system is sent to all output channels. 
+		for (int32 j = 0; j < numChannels; j++) {
+
+			sOut = (Sample32*)out[j] + i;
+			*sOut = tmp / 2.f;
+
 		}
 	}
 	return kResultOk;

@@ -46,6 +46,14 @@ public:
 		std::copy(std::begin(elems), std::begin(elems) + h, values.begin());
 		std::fill(values.begin() + h, values.end(), T{});
 	}
+	Vector(const array<T, d>& elems)
+	{
+		std::copy(std::begin(elems), std::end(elems), values.begin());
+	}
+
+	Vector& operator=(const array<T, d>& elems) {
+
+	}
 	Vector(const T& value = 0)
 	{
 		std::fill(values.begin(), values.end(), value);
@@ -177,7 +185,7 @@ public:
 	// Get current time
 	T getTime() const { return time; }
 	// Set step time interval according to sampling rate
-	void setTimeInterval(T deltaT) { this->deltaT = deltaT; }
+	void setSampleRate(T sampleRate) { this->deltaT = T{ 1. } / sampleRate; }
 	void setVelocity_sq(complex<T> v_sq) {
 		velocity_sq = v_sq;
 	}
