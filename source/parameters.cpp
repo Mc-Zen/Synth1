@@ -3,6 +3,7 @@
 #include "public.sdk/samples/vst/common/logscale.h"
 #include "voice.h" // For VoiceStatics
 #include "controller.h"
+#include "processor.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
 #include <limits>
@@ -36,15 +37,15 @@ void GlobalParameterState::default() {
 
 	filterType = 0;
 	tuningRange = 1;
-	std::fill(X.begin(), X.end(), 0);
-	std::fill(Y.begin(), Y.end(), 0);
+	std::fill(X.begin(), X.end(), .5);
+	std::fill(Y.begin(), Y.end(), .5);
 
 
 	bypassSNA = 0;
 }
 
 
-void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState) {
+void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState, Processor& p) {
 	int32 sampleOffset;
 	ParamValue value;
 	ParamID pid = queue->getParameterId();
@@ -59,27 +60,27 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamVelToLevel: paramState.velToLevel = value; break;
 		case kParamFilterFreqModDepth: paramState.freqModDepth = 2 * (value - 0.5); break;
 
-		case kParamX0: paramState.X[0] = value; break;
-		case kParamX1: paramState.X[1] = value; break;
-		case kParamX2: paramState.X[2] = value; break;
-		case kParamX3: paramState.X[3] = value; break;
-		case kParamX4: paramState.X[4] = value; break;
-		case kParamX5: paramState.X[5] = value; break;
-		case kParamX6: paramState.X[6] = value; break;
-		case kParamX7: paramState.X[7] = value; break;
-		case kParamX8: paramState.X[8] = value; break;
-		case kParamX9: paramState.X[9] = value; break;
+		case kParamX0: paramState.X[0] = value; p.strikingPositionChanged(); break;
+		case kParamX1: paramState.X[1] = value; p.strikingPositionChanged(); break;
+		case kParamX2: paramState.X[2] = value; p.strikingPositionChanged(); break;
+		case kParamX3: paramState.X[3] = value; p.strikingPositionChanged(); break;
+		case kParamX4: paramState.X[4] = value; p.strikingPositionChanged(); break;
+		case kParamX5: paramState.X[5] = value; p.strikingPositionChanged(); break;
+		case kParamX6: paramState.X[6] = value; p.strikingPositionChanged(); break;
+		case kParamX7: paramState.X[7] = value; p.strikingPositionChanged(); break;
+		case kParamX8: paramState.X[8] = value; p.strikingPositionChanged(); break;
+		case kParamX9: paramState.X[9] = value; p.strikingPositionChanged(); break;
 
-		case kParamY0: paramState.Y[0] = value; break;
-		case kParamY1: paramState.Y[1] = value; break;
-		case kParamY2: paramState.Y[2] = value; break;
-		case kParamY3: paramState.Y[3] = value; break;
-		case kParamY4: paramState.Y[4] = value; break;
-		case kParamY5: paramState.Y[5] = value; break;
-		case kParamY6: paramState.Y[6] = value; break;
-		case kParamY7: paramState.Y[7] = value; break;
-		case kParamY8: paramState.Y[8] = value; break;
-		case kParamY9: paramState.Y[9] = value; break;
+		case kParamY0: paramState.Y[0] = value; p.listeningPositionChanged(); break;
+		case kParamY1: paramState.Y[1] = value; p.listeningPositionChanged(); break;
+		case kParamY2: paramState.Y[2] = value; p.listeningPositionChanged(); break;
+		case kParamY3: paramState.Y[3] = value; p.listeningPositionChanged(); break;
+		case kParamY4: paramState.Y[4] = value; p.listeningPositionChanged(); break;
+		case kParamY5: paramState.Y[5] = value; p.listeningPositionChanged(); break;
+		case kParamY6: paramState.Y[6] = value; p.listeningPositionChanged(); break;
+		case kParamY7: paramState.Y[7] = value; p.listeningPositionChanged(); break;
+		case kParamY8: paramState.Y[8] = value; p.listeningPositionChanged(); break;
+		case kParamY9: paramState.Y[9] = value; p.listeningPositionChanged(); break;
 
 
 		case kParamReleaseTime:
@@ -309,6 +310,8 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 20, 1);
 	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 20, 1);
 	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 1);
+	
+	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
 
 
 

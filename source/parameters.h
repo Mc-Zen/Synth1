@@ -21,6 +21,8 @@ class IParamValueQueue;
 }
 namespace Steinberg::Vst::NoteExpressionSynth {
 
+class Processor;
+
 constexpr int maxDimension = 10;
 //-----------------------------------------------------------------------------
 // Global Parameters
@@ -115,7 +117,7 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters);
 //void initNoteExpressions(Steinberg::Vst::NoteExpressionTypeContainer& noteExpressionTypes);
 
 // Read parameters from queue and write the values to a GlobalParameterState. Called from Processor
-void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState);
+void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterState& paramState, Processor& p);
 
 
 }

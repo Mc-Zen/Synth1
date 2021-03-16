@@ -156,11 +156,14 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 			}
 		}
 
-		globalSystem.setSampleRate((float)processSetup.sampleRate);
+		/*globalSystem.setSampleRate((float)processSetup.sampleRate);
 		globalSystem.setFirstListeningPosition({ .2,.1,.34 });
-		globalSystem.setStrikingPosition({ .2,.1,.34 });
+		globalSystem.setStrikingPosition({ .8,.6,.09 });
+		globalSystem.setVelocity_sq({ 1,1 });*/
 		voiceProcessor->clearOutputNeeded(false);
-		globalSystem.setVelocity_sq({ 1,1 });
+		systemWrapper.init((float)processSetup.sampleRate);
+		systemWrapper.updateStrikingPosition(paramState.X);
+		systemWrapper.updateListeningPosition(paramState.Y);
 	}
 	else
 	{
@@ -190,7 +193,7 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 			IParamValueQueue* queue = data.inputParameterChanges->getParameterData(i);
 			if (queue)
 			{
-				processParameters(queue, paramState);
+				processParameters(queue, paramState, *this);
 			}
 		}
 	}
@@ -273,7 +276,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		data.outputs[0].silenceFlags = 0;
 	}
 
-
+	
 
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
 	Sample32* sIn;
@@ -282,17 +285,31 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 
 		// First channel is send into system
 		sIn = (Sample32*)in[0] + i;
-		float tmp = globalSystem.next(*sIn)[0];
+		float tmp = systemWrapper.system.next(*sIn)[0];
+		tmp = (Sample32)systemWrapper.filter.process(tmp);
+
 
 		// response of system is sent to all output channels. 
 		for (int32 j = 0; j < numChannels; j++) {
 
 			sOut = (Sample32*)out[j] + i;
-			*sOut = tmp / 2.f;
+			*sOut = tmp * 2.f * paramState.masterVolume;
 
 		}
 	}
 	return kResultOk;
+}
+void Processor::strikingPositionChanged()
+{
+	//const auto& X = paramState.X;
+	//globalSystem.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] });
+	systemWrapper.updateStrikingPosition(paramState.X);
+}
+void Processor::listeningPositionChanged()
+{
+	//const auto& Y = paramState.Y;
+	//globalSystem.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2] });
+	systemWrapper.updateListeningPosition(paramState.Y);
 }
 } // NoteExpressionSynth
 } // Vst

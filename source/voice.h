@@ -157,7 +157,7 @@ public:
 		system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
 		system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
 		system.pinchDelta(strikeAmount);
-		FDebugPrint("NNOTEToteOn :%d\n", nId);
+		//FDebugPrint("NNOTEToteOn :%d\n", nId);
 	}
 
 	void noteOff(ParamValue velocity, int32 sampleOffset) {
@@ -431,19 +431,19 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 	ParamValue rampTime = std::max<ParamValue>((ParamValue)numSamples, (this->sampleRate * 0.005));
 
 	ParamValue wantedVolume = VoiceStatics::normalizedLevel2Gain((float)Bound(0.0, 1.0, this->globalParameters->masterVolume * levelFromVel + this->values[kVolumeMod]));
-	if (wantedVolume != currentVolume){
+	if (wantedVolume != currentVolume) {
 		volumeRamp = (wantedVolume - currentVolume) / rampTime;
 	}
 
 	if (this->values[kPanningLeft] != currentPanningLeft)
 		panningLeftRamp = (this->values[kPanningLeft] - currentPanningLeft) / rampTime;
-	
+
 	if (this->values[kPanningRight] != currentPanningRight)
 		panningRightRamp = (this->values[kPanningRight] - currentPanningRight) / rampTime;
-	
+
 	if (this->values[kRadiusStrike] != currentRadiusStrike)
 		sinusVolumeRamp = (this->values[kRadiusStrike] - currentRadiusStrike) / rampTime;
-	
+
 
 
 	ParamValue wantedLPFreq = Bound(0., 1., this->globalParameters->filterFreq + this->globalParameters->freqModDepth * this->values[kFilterFrequencyMod]);
@@ -451,7 +451,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 		filterFreqRamp = (wantedLPFreq - currentLPFreq) / rampTime;
 	}
 	ParamValue wantedLPQ = Bound(0., 1., this->globalParameters->filterQ + this->values[kFilterQMod]);
-	if (wantedLPQ != currentLPQ){
+	if (wantedLPQ != currentLPQ) {
 		filterQRamp = (wantedLPQ - currentLPQ) / rampTime;
 	}
 
@@ -565,7 +565,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	currentThetaListening = this->values[kThetaListening] = this->globalParameters->thetaListening;
 	currentPhiStrike = this->values[kPhiStrike] = this->globalParameters->phiStrike;
 	currentPhiListening = this->values[kPhiListening] = this->globalParameters->phiListening;
-	
+
 
 	for (int i = 0; i < maxDimension; i++) {
 		systemWrapper.strikePosition[i] = this->globalParameters->X[i];
@@ -675,7 +675,7 @@ void Voice<SamplePrecision>::setSampleRate(ParamValue _sampleRate)
 
 	//set sample rate of string
 	//system.setSampleRate( _sampleRate);
-	systemWrapper.setSampleRate( _sampleRate);
+	systemWrapper.setSampleRate(_sampleRate);
 }
 
 //-----------------------------------------------------------------------------

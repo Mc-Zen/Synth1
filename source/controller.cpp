@@ -124,7 +124,8 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 		setParamNormalized (kParamVelToLevel, gps.velToLevel);
 		setParamNormalized (kParamFilterFreqModDepth, (gps.freqModDepth + 1) / 2.);
 
-		setParamNormalized (kParamReleaseTime, gps.releaseTime);
+		setParamNormalized(kParamReleaseTime, gps.releaseTime);
+		setParamNormalized(kParamDecay, gps.decay);
 
 		/*setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
 		setParamNormalized(kParamRadiusListening, gps.radiusListening);
@@ -133,8 +134,7 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 		setParamNormalized(kParamPhiStrike, gps.phiStrike);
 		setParamNormalized(kParamPhiListening, gps.phiListening);*/
 
-		setParamNormalized (kParamFilterType,
-		                    plainParamToNormalized (kParamFilterType, gps.filterType));
+		setParamNormalized (kParamFilterType, plainParamToNormalized (kParamFilterType, gps.filterType));
 		setParamNormalized (kParamFilterFreq, gps.filterFreq);
 		setParamNormalized (kParamFilterQ, gps.filterQ);
 

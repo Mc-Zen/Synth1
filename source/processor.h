@@ -46,6 +46,35 @@ class VoiceProcessor;
 
 namespace NoteExpressionSynth {
 
+
+/*
+ * Wrapper class for a global eigenvalue problem system. 
+ */
+class GlobalPhysicalSystemWrapper {
+public:
+	VSTMath::SphereEigenvalueProblem<float, 10, 1> system;
+	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
+
+
+	void init(float sampleRate) {
+		system.setSampleRate(sampleRate);
+		system.setFirstListeningPosition({ .2,.1,.34 });
+		system.setStrikingPosition({ .8,.6,.09 });
+		system.setVelocity_sq({ 1,1 });
+		filter.setSampleRate(sampleRate);
+		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
+		
+	}
+
+	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
+		system.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] });
+	}
+	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
+		system.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2] });
+	}
+};
+
+
 //-----------------------------------------------------------------------------
 /** Example Note Expression Audio Processor
 
@@ -67,6 +96,8 @@ public:
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
 	tresult PLUGIN_API processAudio(ProcessData& data);
+	void listeningPositionChanged();
+	void strikingPositionChanged();
 
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
 
@@ -78,7 +109,9 @@ protected:
 	GlobalParameterState paramState;
 	OneReaderOneWriter::RingBuffer<Event> controllerEvents {16};
 
-	VSTMath::SphereEigenvalueProblem<float, 10, 1> globalSystem;
+	//VSTMath::SphereEigenvalueProblem<float, maxDimension, 1> globalSystem;
+	GlobalPhysicalSystemWrapper systemWrapper;
 };
+
 
 }}} // namespaces
