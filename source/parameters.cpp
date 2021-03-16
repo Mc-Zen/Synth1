@@ -13,7 +13,7 @@
 namespace Steinberg::Vst::NoteExpressionSynth {
 
 
-void GlobalParameterState::default() {
+void GlobalParameterState::defaultSettings() {
 	bypass = false;
 
 	noiseBuffer = nullptr;

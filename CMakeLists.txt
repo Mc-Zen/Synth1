@@ -14,6 +14,7 @@ if(SMTG_ADD_VSTGUI)
         source/ui.h
         source/voice.cpp
         source/voice.h
+        source/eigen_evaluator.h
         source/note_touch_controller.cpp
         source/note_touch_controller.h
         source/version.h
@@ -21,7 +22,7 @@ if(SMTG_ADD_VSTGUI)
         ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.h
         resource/note_expression_synth.uidesc
      )
-
+     
     set(target synth1)
     #set(SDK_IDE_PLUGIN_EXAMPLES_FOLDER FOLDER "PlugInExamples") # added this
 
@@ -86,5 +87,8 @@ if(SMTG_ADD_VSTGUI)
             "${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp"
         )
     endif()
+
+    
+    target_compile_features(${target} PUBLIC cxx_std_17)
 
 endif(SMTG_ADD_VSTGUI)

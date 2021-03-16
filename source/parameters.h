@@ -67,6 +67,7 @@ enum Params : Steinberg::Vst::ParamID
 
 	kParamAngle,
 	kParamSize,
+	kParamGlobalResonatorType,
 
 	kNumGlobalParameters
 };
@@ -110,7 +111,7 @@ struct GlobalParameterState
 	tresult getState(IBStream* stream);
 
 	// Set parameterState to default values;
-	void default();
+	void defaultSettings();
 };
 
 // Add all necessary parameters to the ParameterContainer. Called from Controller

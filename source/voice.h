@@ -131,10 +131,11 @@ public:
 	VSTMath::Vector<type, maxDimension> strikePosition{};
 	VSTMath::Vector<type, maxDimension> listenerPosition{};
 
-	VSTMath::SphereEigenvalueProblem<type, 5, 1> system;
+	VSTMath::SphereEigenvalueProblem<type, 3, 5, 1> system;
 
 	type strikeAmount = 1.f;
 	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
+
 
 
 	void reset() {

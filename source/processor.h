@@ -50,38 +50,48 @@ namespace NoteExpressionSynth {
 /*
  * Wrapper class for a global eigenvalue problem system.
  */
-class GlobalPhysicalSystemWrapper {
+class GlobalResonatorWrapper {
 public:
-	GlobalPhysicalSystemWrapper() {
-		system = &sphere;
+	GlobalResonatorWrapper() {
+		setResonator(ResonatorType::Sphere);
 	}
 
-	enum class Object {
+	enum class ResonatorType {
 		Sphere, Cube
 	};
+
+	// Set the object that the sound is fed into
+	void setResonator(ResonatorType ot) {
+		switch (ot) {
+		case ResonatorType::Cube:
+			resonator = &cube; break;
+		case ResonatorType::Sphere:
+			resonator = &sphere; break;
+		}
+	}
 
 	using type = float;
 	static constexpr int k = 7;
 	static constexpr int numChannels = 1;
 	static constexpr int dim = 3;
 	VSTMath::CubeEigenvalueProblem<type, dim, k, numChannels> cube;
-	VSTMath::SphereEigenvalueProblem<type, k, numChannels> sphere;
+	VSTMath::SphereEigenvalueProblem<type, dim, k, numChannels> sphere;
 	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
 
-	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* system;
+	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* resonator;
 
 	void init(float sampleRate) {
-		system->setSampleRate(sampleRate);
-		system->setVelocity_sq({ 100,1 });
+		resonator->setSampleRate(sampleRate);
+		resonator->setVelocity_sq({ 100,1 });
 		filter.setSampleRate(sampleRate);
 		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
 	}
 
 	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
-		system->setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		resonator->setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
 	}
 	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
-		system->setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+		resonator->setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
 	}
 };
 
@@ -121,7 +131,7 @@ protected:
 	OneReaderOneWriter::RingBuffer<Event> controllerEvents{ 16 };
 
 	//VSTMath::SphereEigenvalueProblem<float, maxDimension, 1> globalSystem;
-	GlobalPhysicalSystemWrapper systemWrapper;
+	GlobalResonatorWrapper systemWrapper;
 };
 
 

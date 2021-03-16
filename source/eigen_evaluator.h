@@ -366,9 +366,12 @@ private:
 /*
  * Implementation of the eigenvalue problem of a sphere. The eigenfunctions and
  * -values are similar and need not be declared separately. The weights are initialized with zero.
+ * 
+ * Warning: This is currently a 3D sphere. The Parameter d is just a dummy to make it compatible with 
+ * an n-dimensional cube etc.
  */
-template <class T, int N, int numChannels>
-class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, 3, N, numChannels>
+template <class T, int d, int N, int numChannels>
+class SphereEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, d, N, numChannels>
 {
 public:
 	SphereEigenvalueProblem() {}
