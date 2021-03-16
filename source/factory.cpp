@@ -35,9 +35,9 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/main/pluginfactory.h"
-#include "note_expression_synth_processor.h"
-#include "note_expression_synth_controller.h"
-#include "note_expression_synth_ui.h"
+#include "processor.h"
+#include "controller.h"
+#include "ui.h"
 #include "version.h"	// for versioning
 
 #if TARGET_OS_IPHONE

@@ -1,8 +1,8 @@
 #include "parameters.h"
 #include "base/source/fstreamer.h"
 #include "public.sdk/samples/vst/common/logscale.h"
-#include "note_expression_synth_voice.h" // For VoiceStatics
-#include "note_expression_synth_controller.h"
+#include "voice.h" // For VoiceStatics
+#include "controller.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
 #include <array>
