@@ -53,7 +53,7 @@ namespace NoteExpressionSynth {
 class GlobalResonatorWrapper {
 public:
 	GlobalResonatorWrapper() {
-		setResonator(ResonatorType::Sphere);
+		setResonator(ResonatorType::Cube);
 	}
 
 	enum class ResonatorType {
@@ -81,17 +81,26 @@ public:
 	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* resonator;
 
 	void init(float sampleRate) {
-		resonator->setSampleRate(sampleRate);
-		resonator->setVelocity_sq({ 100,1 });
+		cube.setSampleRate(sampleRate);
+		sphere.setSampleRate(sampleRate);
+		cube.setVelocity_sq({ 100,1 });
+		sphere.setVelocity_sq({ 100,1 });
 		filter.setSampleRate(sampleRate);
 		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
 	}
 
 	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
-		resonator->setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		cube.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		sphere.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
 	}
 	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
-		resonator->setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+		cube.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+		sphere.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+	}
+
+	inline void setVelocity_sq(std::complex<float> vel) {
+		cube.setVelocity_sq(vel);
+		sphere.setVelocity_sq(vel);
 	}
 };
 
