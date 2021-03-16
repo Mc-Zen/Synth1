@@ -110,63 +110,6 @@ tresult PLUGIN_API Controller::terminate ()
 	return EditController::terminate ();
 }
 
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API Controller::setComponentState (IBStream* state)
-{
-	GlobalParameterState gps;
-	tresult result = gps.setState (state);
-	if (result == kResultTrue)
-	{
-		setParamNormalized(kBypass, gps.bypass);
-
-		setParamNormalized (kParamMasterVolume, gps.masterVolume);
-		setParamNormalized (kParamMasterTuning, (gps.masterTuning + 1) / 2.);
-		setParamNormalized (kParamVelToLevel, gps.velToLevel);
-		setParamNormalized (kParamFilterFreqModDepth, (gps.freqModDepth + 1) / 2.);
-
-		setParamNormalized(kParamReleaseTime, gps.releaseTime);
-		setParamNormalized(kParamDecay, gps.decay);
-
-		/*setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
-		setParamNormalized(kParamRadiusListening, gps.radiusListening);
-		setParamNormalized(kParamThetaStrike, gps.thetaStrike);
-		setParamNormalized(kParamThetaListening, gps.thetaListening);
-		setParamNormalized(kParamPhiStrike, gps.phiStrike);
-		setParamNormalized(kParamPhiListening, gps.phiListening);*/
-
-		setParamNormalized (kParamFilterType, plainParamToNormalized (kParamFilterType, gps.filterType));
-		setParamNormalized (kParamFilterFreq, gps.filterFreq);
-		setParamNormalized (kParamFilterQ, gps.filterQ);
-
-		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
-
-		setParamNormalized (kParamTuningRange, plainParamToNormalized (kParamTuningRange, gps.tuningRange));
-
-		setParamNormalized(kParamX0, gps.X[0]);
-		setParamNormalized(kParamX1, gps.X[1]);
-		setParamNormalized(kParamX2, gps.X[2]);
-		setParamNormalized(kParamX3, gps.X[3]);
-		setParamNormalized(kParamX4, gps.X[4]);
-		setParamNormalized(kParamX5, gps.X[5]);
-		setParamNormalized(kParamX6, gps.X[6]);
-		setParamNormalized(kParamX7, gps.X[7]);
-		setParamNormalized(kParamX8, gps.X[8]);
-		setParamNormalized(kParamX9, gps.X[9]);
-
-		setParamNormalized(kParamY0, gps.Y[0]);
-		setParamNormalized(kParamY1, gps.Y[1]);
-		setParamNormalized(kParamY2, gps.Y[2]);
-		setParamNormalized(kParamY3, gps.Y[3]);
-		setParamNormalized(kParamY4, gps.Y[4]);
-		setParamNormalized(kParamY5, gps.Y[5]);
-		setParamNormalized(kParamY6, gps.Y[6]);
-		setParamNormalized(kParamY7, gps.Y[7]);
-		setParamNormalized(kParamY8, gps.Y[8]);
-		setParamNormalized(kParamY9, gps.Y[9]);
-	}
-	return result;
-}
-
 //------------------------------------------------------------------------
 tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value)
 {
