@@ -5,14 +5,16 @@
 #include "controller.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
-#include <array>
 #include <limits>
+#include <algorithm>
 
 
 namespace Steinberg::Vst::NoteExpressionSynth {
 
 
 void GlobalParameterState::default() {
+	bypass = false;
+
 	noiseBuffer = nullptr;
 	masterVolume = .8;
 	masterTuning = 0;
@@ -34,6 +36,9 @@ void GlobalParameterState::default() {
 
 	filterType = 0;
 	tuningRange = 1;
+	std::fill(X.begin(), X.end(), 0);
+	std::fill(Y.begin(), Y.end(), 0);
+
 
 	bypassSNA = 0;
 }
@@ -46,57 +51,50 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 
 	if (queue->getPoint(queue->getPointCount() - 1, sampleOffset, value) == kResultTrue) {
 		switch (pid) {
-		case kParamMasterVolume:
-			paramState.masterVolume = value;
-			break;
-		case kParamMasterTuning:
-			paramState.masterTuning = 2 * (value - 0.5);
-			break;
-		case kParamVelToLevel:
-			paramState.velToLevel = value;
-			break;
-		case kParamFilterFreqModDepth:
-			paramState.freqModDepth = 2 * (value - 0.5);
-			break;
 
-		case kParamRadiusStrike:
-			paramState.radiusStrike = value;
-			break;
-		case kParamRadiusListening:
-			paramState.radiusListening = value;
-			break;
-		case kParamThetaStrike:
-			paramState.thetaStrike = value;
-			break;
-		case kParamThetaListening:
-			paramState.thetaListening = value;
-			break;
-		case kParamPhiStrike:
-			paramState.phiStrike = value;
-			break;
-		case kParamPhiListening:
-			paramState.phiListening = value;
-			break;
+		case kBypass: paramState.bypass = (value > 0.5f); break;
+
+		case kParamMasterVolume: paramState.masterVolume = value; break;
+		case kParamMasterTuning: paramState.masterTuning = 2 * (value - 0.5); break;
+		case kParamVelToLevel: paramState.velToLevel = value; break;
+		case kParamFilterFreqModDepth: paramState.freqModDepth = 2 * (value - 0.5); break;
+
+		case kParamX0: paramState.X[0] = value; break;
+		case kParamX1: paramState.X[1] = value; break;
+		case kParamX2: paramState.X[2] = value; break;
+		case kParamX3: paramState.X[3] = value; break;
+		case kParamX4: paramState.X[4] = value; break;
+		case kParamX5: paramState.X[5] = value; break;
+		case kParamX6: paramState.X[6] = value; break;
+		case kParamX7: paramState.X[7] = value; break;
+		case kParamX8: paramState.X[8] = value; break;
+		case kParamX9: paramState.X[9] = value; break;
+
+		case kParamY0: paramState.Y[0] = value; break;
+		case kParamY1: paramState.Y[1] = value; break;
+		case kParamY2: paramState.Y[2] = value; break;
+		case kParamY3: paramState.Y[3] = value; break;
+		case kParamY4: paramState.Y[4] = value; break;
+		case kParamY5: paramState.Y[5] = value; break;
+		case kParamY6: paramState.Y[6] = value; break;
+		case kParamY7: paramState.Y[7] = value; break;
+		case kParamY8: paramState.Y[8] = value; break;
+		case kParamY9: paramState.Y[9] = value; break;
+
 
 		case kParamReleaseTime:
-			paramState.releaseTime = value;
-			break;
+			paramState.releaseTime = value; break;
 		case kParamDecay:
-			paramState.decay = value;
-			break;
+			paramState.decay = value; break;
 		case kParamFilterType:
-			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
-			break;
+			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
 		case kParamFilterFreq:
-			paramState.filterFreq = value;
-			break;
+			paramState.filterFreq = value; break;
 		case kParamFilterQ:
-			paramState.filterQ = value;
-			break;
+			paramState.filterQ = value;	break;
 		case kParamBypassSNA:
-			paramState.bypassSNA = (value >= 0.5) ? 1 : 0;
-			break;
+			paramState.bypassSNA = (value >= 0.5) ? 1 : 0; break;
 		case kParamTuningRange:
 			paramState.tuningRange = std::min<int8>((int8)(NUM_TUNING_RANGE * value), NUM_TUNING_RANGE - 1);
 			break;
@@ -104,7 +102,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 	}
 }
 
-static uint64 currentParamStateVersion = 4;
+static uint64 currentParamStateVersion = 5;
 
 tresult GlobalParameterState::setState(IBStream* stream)
 {
@@ -157,8 +155,34 @@ tresult GlobalParameterState::setState(IBStream* stream)
 	}
 	if (version >= 4)
 	{
-		if (!s.readDouble (decay))
+		if (!s.readDouble(decay))
 			return kResultFalse;
+	}
+	if (version >= 5)
+	{
+		if (!s.readBool(bypass)) return kResultFalse;
+
+		if (!s.readDouble(X[0])) return kResultFalse;
+		if (!s.readDouble(X[1])) return kResultFalse;
+		if (!s.readDouble(X[2])) return kResultFalse;
+		if (!s.readDouble(X[3])) return kResultFalse;
+		if (!s.readDouble(X[4])) return kResultFalse;
+		if (!s.readDouble(X[5])) return kResultFalse;
+		if (!s.readDouble(X[6])) return kResultFalse;
+		if (!s.readDouble(X[7])) return kResultFalse;
+		if (!s.readDouble(X[8])) return kResultFalse;
+		if (!s.readDouble(X[9])) return kResultFalse;
+
+		if (!s.readDouble(Y[0])) return kResultFalse;
+		if (!s.readDouble(Y[1])) return kResultFalse;
+		if (!s.readDouble(Y[2])) return kResultFalse;
+		if (!s.readDouble(Y[3])) return kResultFalse;
+		if (!s.readDouble(Y[4])) return kResultFalse;
+		if (!s.readDouble(Y[5])) return kResultFalse;
+		if (!s.readDouble(Y[6])) return kResultFalse;
+		if (!s.readDouble(Y[7])) return kResultFalse;
+		if (!s.readDouble(Y[8])) return kResultFalse;
+		if (!s.readDouble(Y[9])) return kResultFalse;
 	}
 	return kResultTrue;
 }
@@ -210,9 +234,35 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	if (!s.writeInt8(tuningRange))
 		return kResultFalse;
 
-	// version 3
-	if (!s.writeDouble (decay))
+	// version 4
+	if (!s.writeDouble(decay))
 		return kResultFalse;
+
+	// version 5
+
+	if (!s.writeBool(bypass)) return kResultFalse;
+
+	if (!s.writeDouble(X[0])) return kResultFalse;
+	if (!s.writeDouble(X[1])) return kResultFalse;
+	if (!s.writeDouble(X[2])) return kResultFalse;
+	if (!s.writeDouble(X[3])) return kResultFalse;
+	if (!s.writeDouble(X[4])) return kResultFalse;
+	if (!s.writeDouble(X[5])) return kResultFalse;
+	if (!s.writeDouble(X[6])) return kResultFalse;
+	if (!s.writeDouble(X[7])) return kResultFalse;
+	if (!s.writeDouble(X[8])) return kResultFalse;
+	if (!s.writeDouble(X[9])) return kResultFalse;
+
+	if (!s.writeDouble(Y[0])) return kResultFalse;
+	if (!s.writeDouble(Y[1])) return kResultFalse;
+	if (!s.writeDouble(Y[2])) return kResultFalse;
+	if (!s.writeDouble(Y[3])) return kResultFalse;
+	if (!s.writeDouble(Y[4])) return kResultFalse;
+	if (!s.writeDouble(Y[5])) return kResultFalse;
+	if (!s.writeDouble(Y[6])) return kResultFalse;
+	if (!s.writeDouble(Y[7])) return kResultFalse;
+	if (!s.writeDouble(Y[8])) return kResultFalse;
+	if (!s.writeDouble(Y[9])) return kResultFalse;
 
 	return kResultTrue;
 }
@@ -221,44 +271,46 @@ tresult GlobalParameterState::getState(IBStream* stream)
 void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	Parameter* param;
 
-	param = new RangeParameter(USTRING("Master Volume"), kParamMasterVolume, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
+	parameters.addParameter(STR16("Bypass"), 0, 1, 0, Vst::ParameterInfo::kCanAutomate | Vst::ParameterInfo::kIsBypass, kBypass);
 
-	param = new RangeParameter(USTRING("Master Tuning"), kParamMasterTuning, USTRING("cent"), -200, 200, 0);
-	param->setPrecision(0);
-	parameters.addParameter(param);
 
-	param = new RangeParameter(USTRING("Velocity To Level"), kParamVelToLevel, USTRING("%"), 0, 100, 100);
-	param->setPrecision(1);
-	parameters.addParameter(param);
+	auto addRangeParameter = [&](UString256 a, ParamID id, UString256 units, ParamValue min, ParamValue max, ParamValue default, int32 precision = 1) {
+		Parameter* param = new RangeParameter(a, id, units, min, max, default);
+		param->setPrecision(precision);
+		parameters.addParameter(param);
+	};
 
-	param = new RangeParameter(USTRING("Release Time"), kParamReleaseTime, USTRING("sec"), 0.005, MAX_RELEASE_TIME_SEC, 0.025);
-	param->setPrecision(3);
-	parameters.addParameter(param);
+	addRangeParameter("Master Volume", Params::kParamMasterVolume, "%", 0, 100, 80, 1);
+	addRangeParameter("Master Tuning", Params::kParamMasterTuning, "ct", -200, 200, 0, 0);
+	addRangeParameter("Velocity To Level", Params::kParamVelToLevel, "%", 0, 100, 100, 1);
 
-	param = new RangeParameter(USTRING("Decay"), kParamDecay, USTRING("%"), 0, 100, 0);
-	param->setPrecision(3);
-	parameters.addParameter(param);
+	addRangeParameter("Release Time", Params::kParamReleaseTime, "sec", 0.005, MAX_RELEASE_TIME_SEC, 0.025, 3);
 
-	param = new RangeParameter(USTRING("Radius Strike"), kParamRadiusStrike, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
-	param = new RangeParameter(USTRING("Radius Listening"), kParamRadiusListening, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
-	param = new RangeParameter(USTRING("Theta Strike"), kParamThetaStrike, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
-	param = new RangeParameter(USTRING("Theta Listening"), kParamThetaListening, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
-	param = new RangeParameter(USTRING("Phi Strike"), kParamPhiStrike, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
-	param = new RangeParameter(USTRING("Phi Listening"), kParamPhiListening, USTRING("%"), 0, 100, 80);
-	param->setPrecision(1);
-	parameters.addParameter(param);
+	addRangeParameter("Decay", Params::kParamDecay, "%", 0, 100, 80, 1);
+
+	addRangeParameter("X0", Params::kParamX0, "%", 0, 100, 20, 1);
+	addRangeParameter("X1", Params::kParamX1, "%", 0, 100, 20, 1);
+	addRangeParameter("X2", Params::kParamX2, "%", 0, 100, 20, 1);
+	addRangeParameter("X3", Params::kParamX3, "%", 0, 100, 20, 1);
+	addRangeParameter("X4", Params::kParamX4, "%", 0, 100, 20, 1);
+	addRangeParameter("X5", Params::kParamX5, "%", 0, 100, 20, 1);
+	addRangeParameter("X6", Params::kParamX6, "%", 0, 100, 20, 1);
+	addRangeParameter("X7", Params::kParamX7, "%", 0, 100, 20, 1);
+	addRangeParameter("X8", Params::kParamX8, "%", 0, 100, 20, 1);
+	addRangeParameter("X9", Params::kParamX9, "%", 0, 100, 20, 1);
+
+	addRangeParameter("Y0", Params::kParamY0, "%", 0, 100, 20, 1);
+	addRangeParameter("Y1", Params::kParamY1, "%", 0, 100, 20, 1);
+	addRangeParameter("Y2", Params::kParamY2, "%", 0, 100, 20, 1);
+	addRangeParameter("Y3", Params::kParamY3, "%", 0, 100, 20, 1);
+	addRangeParameter("Y4", Params::kParamY4, "%", 0, 100, 20, 1);
+	addRangeParameter("Y5", Params::kParamY5, "%", 0, 100, 20, 1);
+	addRangeParameter("Y6", Params::kParamY6, "%", 0, 100, 20, 1);
+	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 20, 1);
+	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 20, 1);
+	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 1);
+
+
 
 
 	auto* filterTypeParam = new StringListParameter(USTRING("Filter Type"), kParamFilterType);

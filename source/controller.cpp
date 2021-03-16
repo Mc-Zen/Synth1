@@ -70,17 +70,17 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		tuningNoteExpression->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIXMovement);
 		noteExpressionTypes.addNoteExpressionType (tuningNoteExpression);
 		
-		auto noteExp = new NoteExpressionType (kRadiusStrikeTypeID, String ("Radius Strike"), String ("Radius Strike"), String ("%"), -1, getParameterObject (kParamRadiusStrike), NoteExpressionTypeInfo::kIsAbsolute);
+		auto noteExp = new NoteExpressionType (kRadiusStrikeTypeID, String ("Radius Strike"), String ("Radius Strike"), String ("%"), -1, getParameterObject (kParamX0), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
-		noteExp = new NoteExpressionType(kRadiusListeningTypeID, String("Radius Listening"), String("Radius Listening"), String("%"), -1, getParameterObject(kParamRadiusListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExp = new NoteExpressionType(kRadiusListeningTypeID, String("Radius Listening"), String("Radius Listening"), String("%"), -1, getParameterObject(kParamY0), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType(noteExp);
-		noteExp = new NoteExpressionType(kThetaStrikeTypeID, String("Theta Strike"), String("Theta Strike"), String("%"), -1, getParameterObject(kParamThetaStrike), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExp = new NoteExpressionType(kThetaStrikeTypeID, String("Theta Strike"), String("Theta Strike"), String("%"), -1, getParameterObject(kParamX1), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType(noteExp);
-		noteExp = new NoteExpressionType(kThetaListeningTypeID, String("Theta Listening"), String("Theta Listening"), String("%"), -1, getParameterObject(kParamThetaListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExp = new NoteExpressionType(kThetaListeningTypeID, String("Theta Listening"), String("Theta Listening"), String("%"), -1, getParameterObject(kParamY1), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType(noteExp);
-		noteExp = new NoteExpressionType(kPhiStrikeTypeID, String("Phi Strike"), String("Phi Strike"), String("%"), -1, getParameterObject(kParamPhiStrike), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExp = new NoteExpressionType(kPhiStrikeTypeID, String("Phi Strike"), String("Phi Strike"), String("%"), -1, getParameterObject(kParamX2), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType(noteExp);
-		noteExp = new NoteExpressionType(kPhiListeningTypeID, String("Phi Listening"), String("Phi Listening"), String("%"), -1, getParameterObject(kParamPhiListening), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExp = new NoteExpressionType(kPhiListeningTypeID, String("Phi Listening"), String("Phi Listening"), String("%"), -1, getParameterObject(kParamY2), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType(noteExp);
 
 		
@@ -117,6 +117,8 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 	tresult result = gps.setState (state);
 	if (result == kResultTrue)
 	{
+		setParamNormalized(kBypass, gps.bypass);
+
 		setParamNormalized (kParamMasterVolume, gps.masterVolume);
 		setParamNormalized (kParamMasterTuning, (gps.masterTuning + 1) / 2.);
 		setParamNormalized (kParamVelToLevel, gps.velToLevel);
@@ -124,12 +126,12 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 
 		setParamNormalized (kParamReleaseTime, gps.releaseTime);
 
-		setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
+		/*setParamNormalized (kParamRadiusStrike, gps.radiusStrike);
 		setParamNormalized(kParamRadiusListening, gps.radiusListening);
 		setParamNormalized(kParamThetaStrike, gps.thetaStrike);
 		setParamNormalized(kParamThetaListening, gps.thetaListening);
 		setParamNormalized(kParamPhiStrike, gps.phiStrike);
-		setParamNormalized(kParamPhiListening, gps.phiListening);
+		setParamNormalized(kParamPhiListening, gps.phiListening);*/
 
 		setParamNormalized (kParamFilterType,
 		                    plainParamToNormalized (kParamFilterType, gps.filterType));
@@ -138,8 +140,29 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 
 		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
 
-		setParamNormalized (kParamTuningRange,
-		                    plainParamToNormalized (kParamTuningRange, gps.tuningRange));
+		setParamNormalized (kParamTuningRange, plainParamToNormalized (kParamTuningRange, gps.tuningRange));
+
+		setParamNormalized(kParamX0, gps.X[0]);
+		setParamNormalized(kParamX1, gps.X[1]);
+		setParamNormalized(kParamX2, gps.X[2]);
+		setParamNormalized(kParamX3, gps.X[3]);
+		setParamNormalized(kParamX4, gps.X[4]);
+		setParamNormalized(kParamX5, gps.X[5]);
+		setParamNormalized(kParamX6, gps.X[6]);
+		setParamNormalized(kParamX7, gps.X[7]);
+		setParamNormalized(kParamX8, gps.X[8]);
+		setParamNormalized(kParamX9, gps.X[9]);
+
+		setParamNormalized(kParamY0, gps.Y[0]);
+		setParamNormalized(kParamY1, gps.Y[1]);
+		setParamNormalized(kParamY2, gps.Y[2]);
+		setParamNormalized(kParamY3, gps.Y[3]);
+		setParamNormalized(kParamY4, gps.Y[4]);
+		setParamNormalized(kParamY5, gps.Y[5]);
+		setParamNormalized(kParamY6, gps.Y[6]);
+		setParamNormalized(kParamY7, gps.Y[7]);
+		setParamNormalized(kParamY8, gps.Y[8]);
+		setParamNormalized(kParamY9, gps.Y[9]);
 	}
 	return result;
 }
