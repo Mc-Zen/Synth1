@@ -119,6 +119,7 @@ public:
 	tresult PLUGIN_API processAudio(ProcessData& data);
 	void listeningPositionChanged();
 	void strikingPositionChanged();
+	void resonatorTypeChanged();
 
 	tresult PLUGIN_API notify(IMessage* message) SMTG_OVERRIDE;
 

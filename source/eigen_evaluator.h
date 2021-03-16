@@ -252,20 +252,20 @@ public:
 	}
 	void setFirstListeningPosition(const Vector<T, d>& listeningPosition) {
 		for (int j = 0; j < N; ++j) {
-			eigenFunctionEvaluations[0][j] = eigenFunction(j, listeningPosition[0]);
+			eigenFunctionEvaluations[0][j] = this->eigenFunction(j, listeningPosition[0]);
 		}
 	}
 
 	void setStrikingPosition(const Vector<T, d> strikingPosition) {
 		for (int j = 0; j < N; ++j) {
-			eigenFunctionEvaluation_strike[j] = eigenFunction(j, strikingPosition);
+			eigenFunctionEvaluation_strike[j] = this->eigenFunction(j, strikingPosition);
 		}
 	}
 
 	// "Pinch" at the system with delta peak.
 	void pinchDelta(T amount) {
 		for (int i = 0; i < N; i++) {
-			setAmplitude(i, this->amplitude(i) + eigenFunctionEvaluation_strike[i] * amount);
+			this->setAmplitude(i, this->amplitude(i) + eigenFunctionEvaluation_strike[i] * amount);
 		}
 	}
 
@@ -282,7 +282,7 @@ public:
 	}
 
 	T nextFirstChannel() {
-		evolve(this->deltaT);
+		this->evolve(this->deltaT);
 		return evaluateFirstChannel(this->getTime());
 	}
 
@@ -398,7 +398,7 @@ public:
 		return(std::sqrt((2 * l + 1) / 2 * factorial(l - m) / factorial(l + m)));
 	}
 
-	T eigenFunction(int i, const Vector<T, 3> x) const override {
+	T eigenFunction(int i, const Vector<T, d> x) const override {
 		// indices:
 		auto lm = linearIndex(i);
 		int l = lm.first;
@@ -500,10 +500,10 @@ protected:
 		//       | 2·(.5(d-1))!·(4π)^.5(d-1)r^d/d!   odd d 
 		T r = 0;
 		if (!(d % 2)) { // even d
-			r = 2 * std::pow<T>(N / std::pow(pi<T>(), d / 2) * factorial(d / 2), T{ 1 } / d);
+			r = 2 * std::pow(N / std::pow(pi<T>(), d / 2) * factorial(d / 2), T{ 1 } / d);
 		} // odd d
 		else {
-			r = 2 * std::pow<T>(N / std::pow(4 * pi<T>(), (d - 1) / 2) * factorial(d) / factorial((d - 1) / 2) / T{ 2 }, T{ 1 } / d);
+			r = 2 * std::pow(N / std::pow(4 * pi<T>(), (d - 1) / 2) * factorial(d) / factorial((d - 1) / 2) / T{ 2 }, T{ 1 } / d);
 		}
 		// r = largest k we will get
 		return static_cast<int>(std::ceil(r));

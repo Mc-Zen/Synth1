@@ -295,7 +295,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		for (int32 j = 0; j < numChannels; j++) {
 
 			sOut = (Sample32*)out[j] + i;
-			*sOut = tmp * 2.f * paramState.masterVolume;
+			*sOut = tmp * paramState.masterVolume;
 
 		}
 	}
@@ -306,6 +306,11 @@ void Processor::strikingPositionChanged()
 	//const auto& X = paramState.X;
 	//globalSystem.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] });
 	systemWrapper.updateStrikingPosition(paramState.X);
+}
+void Processor::resonatorTypeChanged()
+{
+	systemWrapper.setResonator(static_cast<GlobalResonatorWrapper::ResonatorType>(paramState.resonatorType));
+	//FDebugPrint("changed resonator to %i", paramState.resonatorType);
 }
 void Processor::listeningPositionChanged()
 {

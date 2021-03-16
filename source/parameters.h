@@ -67,7 +67,7 @@ enum Params : Steinberg::Vst::ParamID
 
 	kParamAngle,
 	kParamSize,
-	kParamGlobalResonatorType,
+	kParamResonatorType,
 
 	kNumGlobalParameters
 };
@@ -101,6 +101,8 @@ struct GlobalParameterState
 	int8 tuningRange;			// [0, 1]
 
 	int8 bypassSNA;				// [0, 1]
+
+	int8 resonatorType;			// {0,1}
 
 
 	// All from [0, 1]

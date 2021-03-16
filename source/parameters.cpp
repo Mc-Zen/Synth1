@@ -29,7 +29,7 @@ void GlobalParameterState::defaultSettings() {
 	phiListening = 1;
 
 	releaseTime = 0;
-	decay = 0;
+	decay = .2;
 	size = 0;
 
 	filterFreq = 1;
@@ -41,6 +41,7 @@ void GlobalParameterState::defaultSettings() {
 	std::fill(X.begin(), X.end(), .5);
 	std::fill(Y.begin(), Y.end(), .5);
 
+	resonatorType = 0;
 
 	bypassSNA = 0;
 }
@@ -102,6 +103,10 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamTuningRange:
 			paramState.tuningRange = std::min<int8>((int8)(NUM_TUNING_RANGE * value), NUM_TUNING_RANGE - 1);
 			break;
+
+		case kParamResonatorType:
+			paramState.resonatorType = value; p.resonatorTypeChanged();  break;
+
 		}
 	}
 }
@@ -188,8 +193,8 @@ tresult GlobalParameterState::setState(IBStream* stream)
 		if (!s.readDouble(Y[8])) return kResultFalse;
 		if (!s.readDouble(Y[9])) return kResultFalse;
 
-		if (!s.readDouble(size))
-			return kResultFalse;
+		if (!s.readDouble(size)) return kResultFalse;
+		if (!s.readInt8(resonatorType))	return kResultFalse;
 	}
 	return kResultTrue;
 }
@@ -271,8 +276,9 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	if (!s.writeDouble(Y[8])) return kResultFalse;
 	if (!s.writeDouble(Y[9])) return kResultFalse;
 
-	if (!s.writeDouble(size))
-		return kResultFalse;
+	if (!s.writeDouble(size)) return kResultFalse;
+	if (!s.writeInt8(resonatorType)) return kResultFalse;
+
 
 	return kResultTrue;
 }
@@ -325,6 +331,10 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 
 
 
+	auto* resonatorTypeParam = new StringListParameter(USTRING("Resonator Type"), kParamResonatorType);
+	resonatorTypeParam->appendString(USTRING("Sphere"));
+	resonatorTypeParam->appendString(USTRING("Cube"));
+	parameters.addParameter(resonatorTypeParam);
 
 	auto* filterTypeParam = new StringListParameter(USTRING("Filter Type"), kParamFilterType);
 	filterTypeParam->appendString(USTRING("Lowpass"));
@@ -407,6 +417,9 @@ tresult PLUGIN_API Controller::setComponentState(IBStream* state)
 		setParamNormalized(kParamY9, gps.Y[9]);
 
 		setParamNormalized(kParamSize, gps.size);
+		setParamNormalized(kParamResonatorType, plainParamToNormalized(kParamResonatorType, gps.resonatorType));
+
+
 	}
 	return result;
 }
