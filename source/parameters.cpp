@@ -284,8 +284,8 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	parameters.addParameter(STR16("Bypass"), 0, 1, 0, Vst::ParameterInfo::kCanAutomate | Vst::ParameterInfo::kIsBypass, kBypass);
 
 
-	auto addRangeParameter = [&](UString256 a, ParamID id, UString256 units, ParamValue min, ParamValue max, ParamValue default, int32 precision = 1) {
-		Parameter* param = new RangeParameter(a, id, units, min, max, default);
+	auto addRangeParameter = [&](UString256 a, ParamID id, UString256 units, ParamValue min, ParamValue max, ParamValue defaultValue, int32 precision = 1) {
+		Parameter* param = new RangeParameter(a, id, units, min, max, defaultValue);
 		param->setPrecision(precision);
 		parameters.addParameter(param);
 	};
