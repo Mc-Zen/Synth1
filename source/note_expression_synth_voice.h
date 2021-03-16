@@ -437,9 +437,9 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 
 			const auto& pos = listenerPosition;
 			constexpr type twopi = 2 * VSTMath::pi<type>();
-			system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
+			//system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
 			sample = 10 * system.nextFirstChannel();
-
+			//sample = 0;
 
 			if (noteoffFlag) {
 				// find first zero crossing
@@ -449,9 +449,6 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			}
 
 			n++;
-
-			// add noise
-			//sample += (SamplePrecision)(this->globalParameters->noiseBuffer->at(noisePos) * currentNoiseVolume);
 
 			// filter
 			if (filterFreqRamp != 0. || filterQRamp != 0.)
@@ -542,6 +539,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 
 	const auto& pos = listenerPosition;
 	constexpr type twopi = 2 * VSTMath::pi<type>();
+	system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
 	system.pinchDelta({ pos[0],twopi * pos[1],twopi * pos[2] }, strikeAmount);
 }
 
