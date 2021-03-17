@@ -282,31 +282,41 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	systemWrapper.setVelocity_sq({ (float)paramState.size * 1000,(float)paramState.decay * 5 });
 
 	vuPPMOld = vuPPM;
-
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
-	Sample32* sIn;
-	Sample32* sOut;
+	Sample32* sInL;
+	Sample32* sInR;
+	VSTMath::Vector <GlobalResonatorWrapper::type, GlobalResonatorWrapper::numChannels> tmp;
+	Sample32 pL, pR, avg;
 	for (int32 i = 0; i < numSamples; i++) {
 
 		// First channel is send into system
-		sIn = (Sample32*)in[0] + i;
-		float tmp = systemWrapper.resonator->next(*sIn)[0];
-		tmp = (Sample32)systemWrapper.filter.process(tmp) * paramState.masterVolume;
+		sInL = (Sample32*)in[0] + i;
+		sInR = (Sample32*)in[1] + i;
 
+		tmp = systemWrapper.resonator->next((*sInL + *sInR) * .5f);
+
+		pL = (Sample32)systemWrapper.filter.process(tmp[0]) * paramState.masterVolume;
+		pR = (Sample32)systemWrapper.filterR.process(tmp[1]) * paramState.masterVolume;
+
+		*((Sample32*)out[0] + i) = pL;
+		*((Sample32*)out[1] + i) = pR;
+
+		avg = (std::abs(pL) + std::abs(pR)) * .5f;
+		vuPPM += avg;
 		// response of system is sent to all output channels. 
-		for (int32 j = 0; j < numChannels; j++) {
+		//for (int32 j = 0; j < numChannels; j++) {
 
-			sOut = (Sample32*)out[j] + i;
-			*sOut = tmp;
+		//	sOut = (Sample32*)out[j] + i;
+		//	*sOut = tmp;
 
-			if (tmp > 0) {
-				vuPPM += tmp;
-			}
-			else {
-				vuPPM -= tmp;
+		//	if (tmp > 0) {
+		//		vuPPM += tmp;
+		//	}
+		//	else {
+		//		vuPPM -= tmp;
 
-			}
-		}
+		//	}
+		//}
 	}
 	vuPPM /= numSamples;
 	return kResultOk;

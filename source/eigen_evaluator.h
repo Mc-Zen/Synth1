@@ -51,9 +51,14 @@ public:
 		std::copy(std::begin(elems), std::end(elems), values.begin());
 	}
 
-	Vector& operator=(const array<T, d>& elems) {
-
+	template<class U>
+	Vector(const array<U, d>& elems)
+	{
+		for (int i = 0; i < d; i++) {
+			values[i] = static_cast<T>(elems[i]);
+		}
 	}
+
 	Vector(const T& value = 0)
 	{
 		std::fill(values.begin(), values.end(), value);
@@ -470,9 +475,6 @@ protected:
 		}
 
 		std::sort(kvecs.begin(), kvecs.end(), [](Vector<T, d + 1>& a, Vector<T, d + 1>& b) {return a[d] < b[d]; });
-		for (auto& a : kvecs) {
-			//std::cout << a << "\n";
-		}
 		std::copy(kvecs.begin(), kvecs.begin() + N, ks_and_eigenvalues.begin());
 	}
 	/*
