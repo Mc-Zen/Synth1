@@ -301,8 +301,8 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		*((Sample32*)out[0] + i) = pL;
 		*((Sample32*)out[1] + i) = pR;
 
-		avg = (std::abs(pL) + std::abs(pR)) * .5f;
-		vuPPM += avg;
+		//avg = (std::abs(pL) + std::abs(pR)) * .5f;
+		vuPPM += std::abs(pL);
 		// response of system is sent to all output channels. 
 		//for (int32 j = 0; j < numChannels; j++) {
 

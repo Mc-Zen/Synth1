@@ -43,8 +43,8 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "resource/vu_on.png")
     smtg_add_vst3_resource(${target} "resource/vu_off.png")
     
-    smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot.png")
-    smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot_2.0x.png")
+    smtg_add_vst3_snapshot(${target} "resource/4fa505e70d314866b2cf10c7781d4858_snapshot.png")
+    smtg_add_vst3_snapshot(${target} "resource/4fa505e70d314866b2cf10c7781d4858_snapshot_2.0x.png")
 
     if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
