@@ -156,10 +156,6 @@ tresult PLUGIN_API Processor::setActive(TBool state)
 			}
 		}
 
-		/*globalSystem.setSampleRate((float)processSetup.sampleRate);
-		globalSystem.setFirstListeningPosition({ .2,.1,.34 });
-		globalSystem.setStrikingPosition({ .8,.6,.09 });
-		globalSystem.setVelocity_sq({ 1,1 });*/
 		voiceProcessor->clearOutputNeeded(false);
 		systemWrapper.init((float)processSetup.sampleRate);
 		systemWrapper.updateStrikingPosition(paramState.X);
@@ -224,6 +220,12 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 			{
 				queue->addPoint(0, (ParamValue)voiceProcessor->getActiveVoices() / (ParamValue)MAX_VOICES, index);
 			}
+			if (vuPPM != vuPPMOld) {
+				queue = data.outputParameterChanges->addParameterData(kParamOutputVolume, index);
+				if (queue) {
+					queue->addPoint(0, vuPPM, index);
+				}
+			}
 		}
 		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
 		{
@@ -262,8 +264,9 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	}
 
 	// Die Silence-Flags dienen nur der Optimierung. Man kann CPU sparen, wenn kein Signal anliegt
+	// Achtung dieses Plugin kann Audio produzieren (nachklingen), auch wenn kein Signal anliegt. 
 	{
-		if (data.inputs[0].silenceFlags != 0) {
+		if (data.inputs[0].silenceFlags != 0 && vuPPM < 0.0001) {
 			data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
 
 			for (int32 i = 0; i < numChannels; ++i) {
@@ -276,9 +279,9 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		data.outputs[0].silenceFlags = 0;
 	}
 
-
 	systemWrapper.setVelocity_sq({ (float)paramState.size * 1000,(float)paramState.decay * 5 });
 
+	vuPPMOld = vuPPM;
 
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
 	Sample32* sIn;
@@ -288,34 +291,36 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		// First channel is send into system
 		sIn = (Sample32*)in[0] + i;
 		float tmp = systemWrapper.resonator->next(*sIn)[0];
-		tmp = (Sample32)systemWrapper.filter.process(tmp);
-
+		tmp = (Sample32)systemWrapper.filter.process(tmp) * paramState.masterVolume;
 
 		// response of system is sent to all output channels. 
 		for (int32 j = 0; j < numChannels; j++) {
 
 			sOut = (Sample32*)out[j] + i;
-			*sOut = tmp * paramState.masterVolume;
+			*sOut = tmp;
 
+			if (tmp > 0) {
+				vuPPM += tmp;
+			}
+			else {
+				vuPPM -= tmp;
+
+			}
 		}
 	}
+	vuPPM /= numSamples;
 	return kResultOk;
 }
 void Processor::strikingPositionChanged()
 {
-	//const auto& X = paramState.X;
-	//globalSystem.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] });
 	systemWrapper.updateStrikingPosition(paramState.X);
 }
 void Processor::resonatorTypeChanged()
 {
 	systemWrapper.setResonator(static_cast<GlobalResonatorWrapper::ResonatorType>(paramState.resonatorType));
-	//FDebugPrint("changed resonator to %i", paramState.resonatorType);
 }
 void Processor::listeningPositionChanged()
 {
-	//const auto& Y = paramState.Y;
-	//globalSystem.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2] });
 	systemWrapper.updateListeningPosition(paramState.Y);
 }
 } // NoteExpressionSynth

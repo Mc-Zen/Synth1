@@ -40,6 +40,8 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "resource/knob big.png")
     smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
     smtg_add_vst3_resource(${target} "resource/studstift_logo.png")
+    smtg_add_vst3_resource(${target} "resource/vu_on.png")
+    smtg_add_vst3_resource(${target} "resource/vu_off.png")
     
     smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot.png")
     smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot_2.0x.png")
@@ -77,6 +79,9 @@ if(SMTG_ADD_VSTGUI)
         smtg_add_vst3_resource(${target} "resource/knob big.png")
         smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
         smtg_add_vst3_resource(${target} "resource/studstift_logo.png")
+        smtg_add_vst3_resource(${target} "resource/vu_on.png")
+        smtg_add_vst3_resource(${target} "resource/vu_off.png")
+    
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
         target_sources(${target} PRIVATE 
             "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp"

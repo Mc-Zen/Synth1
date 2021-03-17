@@ -41,7 +41,7 @@ enum Params : Steinberg::Vst::ParamID
 	kParamVelToLevel,
 	kParamFilterFreqModDepth,
 	kParamTuningRange,
-	kParamActiveVoices,
+	kParamActiveVoices,  // OUT
 
 	kParamX0,
 	kParamX1,
@@ -68,6 +68,7 @@ enum Params : Steinberg::Vst::ParamID
 	kParamAngle,
 	kParamSize,
 	kParamResonatorType,
+	kParamOutputVolume,   // OUT
 
 	kNumGlobalParameters
 };
@@ -104,6 +105,7 @@ struct GlobalParameterState
 
 	int8 resonatorType;			// {0,1}
 
+	ParamValue outputVolume;	// [0, +1] OUT
 
 	// All from [0, 1]
 	std::array<ParamValue, maxDimension> X; // input (striking) position in #N D

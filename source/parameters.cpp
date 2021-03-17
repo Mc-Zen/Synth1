@@ -329,6 +329,7 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
 	addRangeParameter("Size", Params::kParamSize, "%", 0, 100, 0, 1);
 
+	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));
 
 
 	auto* resonatorTypeParam = new StringListParameter(USTRING("Resonator Type"), kParamResonatorType);

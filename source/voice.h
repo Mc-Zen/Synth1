@@ -158,11 +158,9 @@ public:
 		system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
 		system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
 		system.pinchDelta(strikeAmount);
-		//FDebugPrint("NNOTEToteOn :%d\n", nId);
 	}
 
 	void noteOff(ParamValue velocity, int32 sampleOffset) {
-
 		//when note is off, set flag that system should be silenced at next zero crossing
 		noteoffFlag = true;
 	}
@@ -234,17 +232,6 @@ protected:
 	ParamValue levelFromVel;
 	ParamValue noteOffVolumeRamp;
 
-	/*using type = float;
-	VSTMath::Vector<type, maxDimension> strikePosition{};
-	VSTMath::Vector<type, maxDimension> listenerPosition{};
-
-	//create string with length 0.01 m
-	VSTMath::SphereEigenvalueProblem<type, 5, 1> system;
-
-	type strikeAmount = 1.f;
-	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
-
-	bool noteoffFlag = false;*/
 	PhysicalSystemWrapper systemWrapper;
 };
 
@@ -492,24 +479,10 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 			//sample += (SamplePrecision)(sin(n * sinusFreq + sinusPhase) * currentSinusVolume);
 			//sample = 0;
 
-			//iterate the system and multiply with volume to make it attenuatable
-			//the listening position is at 0.7 times the string length
-			//sample = currentSquareVolume * system.next({ system.getLength() * 0.7f });
-			//system.setFirstListeningPosition({ (float)currentRadiusListening, (float)(currentThetaListening * M_PI_MUL_2),  (float)(currentPhiListening * M_PI_MUL_2) ,.5 });
-
-			//const auto& pos = listenerPosition;
-			//constexpr type twopi = 2 * VSTMath::pi<type>();
-			//system.setFirstListeningPosition({ pos[0],twopi * pos[1],twopi * pos[2] });
-			//sample = 10 * system.nextFirstChannel();
+		
 
 			sample = 10 * systemWrapper.nextFirstChannel();
 
-			/*if (noteoffFlag) {
-				// find first zero crossing
-				if (std::abs(sample) < 0.0001) {
-					system.silence();
-				}
-			}*/
 
 			n++;
 
@@ -592,19 +565,6 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn(_pitch, velocity, _tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
 
-
-
-	/*noteoffFlag = false;
-	system.resetTime(); // let's avoid a discontinuity at beginning
-	system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)this->globalParameters->decay * 5.f,0.f) });
-
-	const auto& pos_lis = listenerPosition;
-	const auto& pos_str = strikePosition;
-	constexpr type twopi = 2 * VSTMath::pi<type>();
-	system.setFirstListeningPosition({ pos_lis[0],twopi * pos_lis[1],twopi * pos_lis[2] });
-	system.setStrikingPosition({ pos_str[0],twopi * pos_str[1],twopi * pos_str[2] });
-	system.pinchDelta(strikeAmount);*/
-
 	systemWrapper.noteOn(_pitch, velocity, _tuning, sampleOffset, nId, this->globalParameters);
 }
 
@@ -625,8 +585,6 @@ void Voice<SamplePrecision>::noteOff(ParamValue velocity, int32 sampleOffset)
 	if (currentVolume)
 		noteOffVolumeRamp *= currentVolume;
 
-	//when note is off, set flag that system should be silenced at next zero crossing
-	//noteoffFlag = true;
 	systemWrapper.noteOff(velocity, sampleOffset);
 }
 
@@ -659,9 +617,6 @@ void Voice<SamplePrecision>::reset()
 	filter->reset();
 	noteOffVolumeRamp = 0.005;
 
-	//when voice is reset, silence the string
-	/*system.silence();
-	noteoffFlag = false;*/
 	systemWrapper.reset();
 
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset();
@@ -675,7 +630,6 @@ void Voice<SamplePrecision>::setSampleRate(ParamValue _sampleRate)
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate(_sampleRate);
 
 	//set sample rate of string
-	//system.setSampleRate( _sampleRate);
 	systemWrapper.setSampleRate(_sampleRate);
 }
 

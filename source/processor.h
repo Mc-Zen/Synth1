@@ -140,8 +140,10 @@ protected:
 	GlobalParameterState paramState;
 	OneReaderOneWriter::RingBuffer<Event> controllerEvents{ 16 };
 
-	//VSTMath::SphereEigenvalueProblem<float, maxDimension, 1> globalSystem;
 	GlobalResonatorWrapper systemWrapper;
+
+	double vuPPM = 0;
+	double vuPPMOld = 0;
 };
 
 
