@@ -68,6 +68,7 @@ enum Params : Steinberg::Vst::ParamID
 	kParamAngle,
 	kParamSize,
 	kParamResonatorType,
+	kParamDim,
 	kParamOutputVolume,   // OUT
 
 	kNumGlobalParameters
@@ -104,6 +105,8 @@ struct GlobalParameterState
 	int8 bypassSNA;				// [0, 1]
 
 	int8 resonatorType;			// {0,1}
+
+	int8 dimension;			// {1,...,10}
 
 	ParamValue outputVolume;	// [0, +1] OUT
 

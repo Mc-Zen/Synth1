@@ -80,6 +80,10 @@ public:
 
 	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* resonator;
 
+	void setDimension(int dimension) {
+		cube.setDimension(dimension);
+	}
+
 	void init(float sampleRate) {
 		cube.setSampleRate(sampleRate);
 		sphere.setSampleRate(sampleRate);
@@ -129,6 +133,7 @@ public:
 	void listeningPositionChanged();
 	void strikingPositionChanged();
 	void resonatorTypeChanged();
+	void dimensionChanged();
 
 	tresult PLUGIN_API notify(IMessage* message) SMTG_OVERRIDE;
 
