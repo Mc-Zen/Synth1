@@ -53,7 +53,7 @@ namespace NoteExpressionSynth {
 class GlobalResonatorWrapper {
 public:
 	GlobalResonatorWrapper() {
-		setResonator(ResonatorType::Cube);
+		setResonator(ResonatorType::Sphere);
 	}
 
 	enum class ResonatorType {
@@ -72,11 +72,12 @@ public:
 
 	using type = float;
 	static constexpr int k = 7;
-	static constexpr int numChannels = 1;
-	static constexpr int dim = 3;
+	static constexpr int numChannels = 2;
+	static constexpr int dim = maxDimension;
 	VSTMath::CubeEigenvalueProblem<type, dim, k, numChannels> cube;
 	VSTMath::SphereEigenvalueProblem<type, dim, k, numChannels> sphere;
 	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
+	Filter filterR{ Filter::kHighpass }; 
 
 	VSTMath::FixedListenerEigenvalueProblem<type, dim, k, numChannels>* resonator;
 
@@ -90,16 +91,27 @@ public:
 		cube.setVelocity_sq({ 100,1 });
 		sphere.setVelocity_sq({ 100,1 });
 		filter.setSampleRate(sampleRate);
+		filterR.setSampleRate(sampleRate);
 		filter.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
+		filterR.setFreqAndQ(VoiceStatics::freqLogScale.scale(.2), .8);
 	}
 
 	inline void updateStrikingPosition(const std::array<ParamValue, maxDimension>& X) {
-		cube.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
-		sphere.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		cube.setStrikingPosition({ X });
+		sphere.setStrikingPosition({ X });
+		//cube.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
+		//sphere.setStrikingPosition({ (float)X[0], (float)X[1], (float)X[2] , (float)X[3] });
 	}
 	inline void updateListeningPosition(const std::array<ParamValue, maxDimension>& Y) {
-		cube.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
-		sphere.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+
+		const VSTMath::Vector<type, maxDimension> y = Y;
+		const VSTMath::Vector<type, maxDimension> center(.5);
+		cube.setListeningPositions({ y, center * 2 - y });
+		sphere.setListeningPositions({ y, y * -1 });
+		//cube.setFirstListeningPosition({ Y });
+		//sphere.setFirstListeningPosition({ Y });
+		//cube.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
+		//sphere.setFirstListeningPosition({ (float)Y[0],  (float)Y[1], (float)Y[2], (float)Y[3] });
 	}
 
 	inline void setVelocity_sq(std::complex<float> vel) {
