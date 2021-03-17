@@ -441,6 +441,14 @@ public:
 	CubeEigenvalueProblem() {
 		computeEigenvalues_and_ks();
 	}
+
+	void setDimension(int dimension) {
+		if (dimension > 10 || dimension < 1) return;
+		if (actualDim != dimension) {
+			actualDim = dimension;
+			computeEigenvalues_and_ks();
+		}
+	}
 protected:
 	/*
 
@@ -456,22 +464,23 @@ protected:
 	*/
 	void computeEigenvalues_and_ks() {
 		int r = getRApprox();
-		std::vector<Vector<T, d + 1>> kvecs;
 
-		int maxNumEigenvalues = std::pow(r + 1, d);
+		int maxNumEigenvalues = std::pow(r + 1, actualDim);
 		//if (maxNumEigenvalues < N) throw std::exception("r<N");
+
+		std::vector<Vector<T, d + 1>> kvecs(maxNumEigenvalues);
 
 		for (int i = 0; i < maxNumEigenvalues; ++i) {
 			Vector<T, d + 1> kvec{}; // last entry sums up the squares of the other entries
 			int kindex = i;
-			for (int j = 0; j < d; j++) {
+			for (int j = 0; j < actualDim; j++) {
 				kvec[j] = kindex % (r + 1) + 1;
 				kindex /= (r + 1);
 				kvec[d] += kvec[j] * kvec[j];
 			}
 			kvec[d] = static_cast<T>(std::sqrt(kvec[d]));
 
-			kvecs.push_back(kvec);
+			kvecs[i] = kvec;
 		}
 
 		std::sort(kvecs.begin(), kvecs.end(), [](Vector<T, d + 1>& a, Vector<T, d + 1>& b) {return a[d] < b[d]; });
@@ -501,11 +510,11 @@ protected:
 		// V =   |
 		//       | 2·(.5(d-1))!·(4π)^.5(d-1)r^d/d!   odd d 
 		T r = 0;
-		if (!(d % 2)) { // even d
-			r = 2 * std::pow(N / std::pow(pi<T>(), d / 2) * factorial(d / 2), T{ 1 } / d);
+		if (!(actualDim % 2)) { // even d
+			r = 2 * std::pow(N / std::pow(pi<T>(), actualDim / 2) * factorial(actualDim / 2), T{ 1 } / actualDim);
 		} // odd d
 		else {
-			r = 2 * std::pow(N / std::pow(4 * pi<T>(), (d - 1) / 2) * factorial(d) / factorial((d - 1) / 2) / T{ 2 }, T{ 1 } / d);
+			r = 2 * std::pow(N / std::pow(4 * pi<T>(), (actualDim - 1) / 2) * factorial(actualDim) / factorial((actualDim - 1) / 2) / T{ 2 }, T{ 1 } / actualDim);
 		}
 		// r = largest k we will get
 		return static_cast<int>(std::ceil(r));
@@ -520,7 +529,7 @@ protected:
 	T eigenFunction(int i, const Vector<T, d> x) const override
 	{
 		T result{ 1 };
-		for (int j = 0; j < d; ++j) {
+		for (int j = 0; j < actualDim; ++j) {
 			result *= std::sin(ks_and_eigenvalues[i][j] * pi<T>() * x[j]);
 		}
 		return result;
@@ -533,6 +542,7 @@ protected:
 
 private:
 	array<Vector<T, d + 1>, N> ks_and_eigenvalues{};
+	int actualDim = d;
 };
 
 /*

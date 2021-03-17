@@ -333,6 +333,10 @@ void Processor::listeningPositionChanged()
 {
 	systemWrapper.updateListeningPosition(paramState.Y);
 }
+void Processor::dimensionChanged()
+{
+	systemWrapper.setDimension(paramState.dimension);
+}
 } // NoteExpressionSynth
 } // Vst
 } // Steinberg

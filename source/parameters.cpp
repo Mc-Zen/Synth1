@@ -42,6 +42,7 @@ void GlobalParameterState::defaultSettings() {
 	std::fill(Y.begin(), Y.end(), .5);
 
 	resonatorType = 0;
+	dimension = 10;
 
 	bypassSNA = 0;
 }
@@ -91,6 +92,8 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 			paramState.decay = value; break;
 		case kParamSize:
 			paramState.size = value; break;
+		case kParamDim:
+			paramState.dimension = std::min<int8>((int8)(11 * value + 1), 10);p.dimensionChanged();break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
@@ -195,6 +198,7 @@ tresult GlobalParameterState::setState(IBStream* stream)
 
 		if (!s.readDouble(size)) return kResultFalse;
 		if (!s.readInt8(resonatorType))	return kResultFalse;
+		if (!s.readInt8(dimension))	return kResultFalse;
 	}
 	return kResultTrue;
 }
@@ -278,6 +282,7 @@ tresult GlobalParameterState::getState(IBStream* stream)
 
 	if (!s.writeDouble(size)) return kResultFalse;
 	if (!s.writeInt8(resonatorType)) return kResultFalse;
+	if (!s.writeInt8(dimension)) return kResultFalse;
 
 
 	return kResultTrue;
@@ -327,7 +332,8 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 0);
 	
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
-	addRangeParameter("Size", Params::kParamSize, "%", 0, 100, 0, 1);
+	addRangeParameter("ResFreq", Params::kParamSize, "%", 0, 100, 0, 1);
+	addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
 
 	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));
 
@@ -419,7 +425,7 @@ tresult PLUGIN_API Controller::setComponentState(IBStream* state)
 
 		setParamNormalized(kParamSize, gps.size);
 		setParamNormalized(kParamResonatorType, plainParamToNormalized(kParamResonatorType, gps.resonatorType));
-
+		setParamNormalized(kParamDim, gps.dimension);
 
 	}
 	return result;
