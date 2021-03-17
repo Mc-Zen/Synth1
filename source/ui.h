@@ -106,6 +106,18 @@ public:
 	static FUID cid;
 };
 
+// Audio effect plugin version (some DAWs don't support plugins that can be used as instrument and fx)
+class ControllerWithUIFx : public ControllerWithUI {
+public:
+
+	static FUID cid;
+};
+
+class ProcessorWithUIControllerFx : public ProcessorWithUIController {
+public:
+
+	static FUID cid;
+};
 //------------------------------------------------------------------------
 } // NoteExpressionSynth
 } // Vst

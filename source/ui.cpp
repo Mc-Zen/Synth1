@@ -376,7 +376,9 @@ private:
 
 //------------------------------------------------------------------------
 FUID ControllerWithUI::cid (0xc11ac378, 0xea9b4e33, 0x8745f2c3, 0xdd081ffb);
+FUID ControllerWithUIFx::cid (0x714d9276, 0xb616443e, 0xb044d18f, 0xd49706ca);
 FUID ProcessorWithUIController::cid (0x4fa505e7, 0x0d314866, 0xb2cf10c7, 0x781d4858);
+FUID ProcessorWithUIControllerFx::cid (0xf445d4b8, 0x44434dfa, 0xb7752736, 0x9932656e);
 
 enum
 {

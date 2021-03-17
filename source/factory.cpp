@@ -45,34 +45,54 @@
 extern void* moduleHandle;
 #endif
 
-#define stringPluginName "Synth 1"
+#define stringPluginName "Tesseract"
 
 
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF("Roggenburg Technology",
+	"http://www.steinberg.net",
+	"mailto:info@steinberg.de")
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIController::cid),
-				PClassInfo::kManyInstances,
-				kVstAudioEffectClass,
-				stringPluginName " With UI",
-				Vst::kDistributable,
-				Vst::PlugType::kFxInstrument,
-				FULL_VERSION_STR,
-				kVstVersionString,
-				Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIController::createInstance)
+	DEF_CLASS2(INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIController::cid),
+		PClassInfo::kManyInstances,
+		kVstAudioEffectClass,
+		stringPluginName,
+		Vst::kDistributable,
+		"Instrument|Multidimensional",
+		FULL_VERSION_STR,
+		kVstVersionString,
+		Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIController::createInstance)
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ControllerWithUI::cid),
-				PClassInfo::kManyInstances,
-				kVstComponentControllerClass,
-				stringPluginName " With UI",
-				0,						// not used here
-				"",						// not used here
-				FULL_VERSION_STR,
-				kVstVersionString,
-				Steinberg::Vst::NoteExpressionSynth::ControllerWithUI::createInstance)
+	DEF_CLASS2(INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ControllerWithUI::cid),
+		PClassInfo::kManyInstances,
+		kVstComponentControllerClass,
+		stringPluginName,
+		0,						// not used here
+		"",						// not used here
+		FULL_VERSION_STR,
+		kVstVersionString,
+		Steinberg::Vst::NoteExpressionSynth::ControllerWithUI::createInstance)
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::Processor::cid),
+	DEF_CLASS2(INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIControllerFx::cid),
+		PClassInfo::kManyInstances,
+		kVstAudioEffectClass,
+		stringPluginName " Fx",
+		Vst::kDistributable,
+		"Fx|Multidimensional",
+		FULL_VERSION_STR,
+		kVstVersionString,
+		Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIControllerFx::createInstance)
+
+	DEF_CLASS2(INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ControllerWithUIFx::cid),
+		PClassInfo::kManyInstances,
+		kVstComponentControllerClass,
+		stringPluginName " Fx",
+		0,						// not used here
+		"",						// not used here
+		FULL_VERSION_STR,
+		kVstVersionString,
+		Steinberg::Vst::NoteExpressionSynth::ControllerWithUIFx::createInstance)
+
+	/*DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::Processor::cid),
 				PClassInfo::kManyInstances,
 				kVstAudioEffectClass,
 				stringPluginName,
@@ -90,16 +110,16 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				"",						// not used here
 				FULL_VERSION_STR,
 				kVstVersionString,
-				Steinberg::Vst::NoteExpressionSynth::Controller::createInstance)
+				Steinberg::Vst::NoteExpressionSynth::Controller::createInstance)*/
 
-END_FACTORY
+	END_FACTORY
 
-bool InitModule ()
+	bool InitModule()
 {
 #if TARGET_OS_IPHONE
-	Steinberg::Vst::VSTGUIEditor::setBundleRef (moduleHandle);
+	Steinberg::Vst::VSTGUIEditor::setBundleRef(moduleHandle);
 #endif
 	return true;
 }
 
-bool DeinitModule () { return true; }
+bool DeinitModule() { return true; }

@@ -54,12 +54,12 @@
 // Version without build number (example "1.0.3")
 #define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
-#define stringOriginalFilename	"Synth 1xx.vst3"
+#define stringOriginalFilename	"Tesseract.vst3"
 #if SMTG_PLATFORM_64
-#define stringFileDescription	"Synth 1 (64Bit)"
+#define stringFileDescription	"Tesseract (64Bit)"
 #else
-#define stringFileDescription	"Synth 1"
+#define stringFileDescription	"Tesseract"
 #endif
-#define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
+#define stringCompanyName		"Roggenburg Technologies\0"
+#define stringLegalCopyright	"© 2021 Roggenburg Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"
