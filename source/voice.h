@@ -481,7 +481,7 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 
 		
 
-			sample = 10 * systemWrapper.nextFirstChannel();
+			sample = 20 * systemWrapper.nextFirstChannel();
 
 
 			n++;

@@ -30,7 +30,7 @@ void GlobalParameterState::defaultSettings() {
 
 	releaseTime = 0;
 	decay = .2;
-	size = 0;
+	size = .5;
 
 	filterFreq = 1;
 	filterQ = 0;
@@ -40,8 +40,11 @@ void GlobalParameterState::defaultSettings() {
 	tuningRange = 1;
 	std::fill(X.begin(), X.end(), .5);
 	std::fill(Y.begin(), Y.end(), .5);
-
-	resonatorType = 0;
+	X[0] = .2;
+	X[1] = .8;
+	Y[0] = .7;
+	Y[1] = .22;
+	resonatorType = 1;
 	dimension = 10;
 
 	bypassSNA = 0;
@@ -315,30 +318,30 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 
 	addRangeParameter("Decay", Params::kParamDecay, "%", 0, 100, 80, 1);
 
-	addRangeParameter("X0", Params::kParamX0, "%", 0, 100, 20, 0);
-	addRangeParameter("X1", Params::kParamX1, "%", 0, 100, 20, 0);
-	addRangeParameter("X2", Params::kParamX2, "%", 0, 100, 20, 0);
-	addRangeParameter("X3", Params::kParamX3, "%", 0, 100, 20, 0);
-	addRangeParameter("X4", Params::kParamX4, "%", 0, 100, 20, 0);
-	addRangeParameter("X5", Params::kParamX5, "%", 0, 100, 20, 0);
-	addRangeParameter("X6", Params::kParamX6, "%", 0, 100, 20, 0);
-	addRangeParameter("X7", Params::kParamX7, "%", 0, 100, 20, 0);
-	addRangeParameter("X8", Params::kParamX8, "%", 0, 100, 20, 0);
-	addRangeParameter("X9", Params::kParamX9, "%", 0, 100, 20, 0);
+	addRangeParameter("X0", Params::kParamX0, "%", 0, 100, 50, 0);
+	addRangeParameter("X1", Params::kParamX1, "%", 0, 100, 50, 0);
+	addRangeParameter("X2", Params::kParamX2, "%", 0, 100, 50, 0);
+	addRangeParameter("X3", Params::kParamX3, "%", 0, 100, 50, 0);
+	addRangeParameter("X4", Params::kParamX4, "%", 0, 100, 50, 0);
+	addRangeParameter("X5", Params::kParamX5, "%", 0, 100, 50, 0);
+	addRangeParameter("X6", Params::kParamX6, "%", 0, 100, 50, 0);
+	addRangeParameter("X7", Params::kParamX7, "%", 0, 100, 50, 0);
+	addRangeParameter("X8", Params::kParamX8, "%", 0, 100, 50, 0);
+	addRangeParameter("X9", Params::kParamX9, "%", 0, 100, 50, 0);
 
-	addRangeParameter("Y0", Params::kParamY0, "%", 0, 100, 20, 0);
-	addRangeParameter("Y1", Params::kParamY1, "%", 0, 100, 20, 0);
-	addRangeParameter("Y2", Params::kParamY2, "%", 0, 100, 20, 0);
-	addRangeParameter("Y3", Params::kParamY3, "%", 0, 100, 20, 0);
-	addRangeParameter("Y4", Params::kParamY4, "%", 0, 100, 20, 0);
-	addRangeParameter("Y5", Params::kParamY5, "%", 0, 100, 20, 0);
-	addRangeParameter("Y6", Params::kParamY6, "%", 0, 100, 20, 0);
-	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 20, 0);
-	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 20, 0);
-	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 0);
+	addRangeParameter("Y0", Params::kParamY0, "%", 0, 100, 50, 0);
+	addRangeParameter("Y1", Params::kParamY1, "%", 0, 100, 50, 0);
+	addRangeParameter("Y2", Params::kParamY2, "%", 0, 100, 50, 0);
+	addRangeParameter("Y3", Params::kParamY3, "%", 0, 100, 50, 0);
+	addRangeParameter("Y4", Params::kParamY4, "%", 0, 100, 50, 0);
+	addRangeParameter("Y5", Params::kParamY5, "%", 0, 100, 50, 0);
+	addRangeParameter("Y6", Params::kParamY6, "%", 0, 100, 50, 0);
+	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 50, 0);
+	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 50, 0);
+	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 50, 0);
 	
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
-	addRangeParameter("ResFreq", Params::kParamSize, "%", 0, 100, 0, 1);
+	addRangeParameter("Resonance Frequency", Params::kParamSize, "%", 0, 100, 0, 1);
 	addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
 
 	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));

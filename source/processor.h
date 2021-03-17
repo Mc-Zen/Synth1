@@ -53,7 +53,7 @@ namespace NoteExpressionSynth {
 class GlobalResonatorWrapper {
 public:
 	GlobalResonatorWrapper() {
-		setResonator(ResonatorType::Sphere);
+		setResonator(ResonatorType::Cube);
 	}
 
 	enum class ResonatorType {
