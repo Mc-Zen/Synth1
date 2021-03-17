@@ -42,6 +42,7 @@ void GlobalParameterState::defaultSettings() {
 	std::fill(Y.begin(), Y.end(), .5);
 
 	resonatorType = 0;
+	dimension = 10;
 
 	bypassSNA = 0;
 }
@@ -92,12 +93,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamSize:
 			paramState.size = value; break;
 		case kParamDim:
-			paramState.dimension = std::min<int8>((int8)(11 * value), 10);
-			p.dimensionChanged();
-			//paramState.Y[4] = 0;
-			
-			
-			break;
+			paramState.dimension = std::min<int8>((int8)(11 * value + 1), 10);p.dimensionChanged();break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
@@ -336,8 +332,8 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 20, 0);
 	
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
-	addRangeParameter("Size", Params::kParamSize, "%", 0, 100, 0, 1);
-	addRangeParameter("Dimension", Params::kParamDim, " ", 0, 10, 10, 0);
+	addRangeParameter("ResFreq", Params::kParamSize, "%", 0, 100, 0, 1);
+	addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
 
 	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));
 

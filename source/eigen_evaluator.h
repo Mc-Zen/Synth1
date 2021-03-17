@@ -480,7 +480,7 @@ protected:
 			}
 			kvec[d] = static_cast<T>(std::sqrt(kvec[d]));
 
-			kvecs.push_back(kvec);
+			kvecs[i] = kvec;
 		}
 
 		std::sort(kvecs.begin(), kvecs.end(), [](Vector<T, d + 1>& a, Vector<T, d + 1>& b) {return a[d] < b[d]; });
