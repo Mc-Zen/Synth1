@@ -114,7 +114,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 	}
 }
 
-static uint64 currentParamStateVersion = 5;
+static uint64 currentParamStateVersion = 6;
 
 tresult GlobalParameterState::setState(IBStream* stream)
 {
@@ -198,6 +198,10 @@ tresult GlobalParameterState::setState(IBStream* stream)
 
 		if (!s.readDouble(size)) return kResultFalse;
 		if (!s.readInt8(resonatorType))	return kResultFalse;
+	}
+
+	if (version >= 6)
+	{
 		if (!s.readInt8(dimension))	return kResultFalse;
 	}
 	return kResultTrue;
@@ -282,6 +286,8 @@ tresult GlobalParameterState::getState(IBStream* stream)
 
 	if (!s.writeDouble(size)) return kResultFalse;
 	if (!s.writeInt8(resonatorType)) return kResultFalse;
+
+	// version 6
 	if (!s.writeInt8(dimension)) return kResultFalse;
 
 
