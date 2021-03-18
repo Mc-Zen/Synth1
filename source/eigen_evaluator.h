@@ -8,6 +8,7 @@
 #include <numeric>
 #include <functional>
 #include <cmath>
+#include "legendre.h"
 
 namespace VSTMath
 {
@@ -414,7 +415,7 @@ public:
 		T theta = x[1];
 		T phi = x[2];
 
-		T legend = std::assoc_legendre(l, m, std::cos(theta));
+		T legend = static_cast<T>(VSTMath::assoc_legendre(l, m, std::cos(theta)));
 
 		// return only real part 
 		return  std::pow(r, l) / rsrqt2pi * normalizer(l, m) * legend * std::cos(m * phi);
