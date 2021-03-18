@@ -161,6 +161,7 @@ protected:
 
 	double vuPPM = 0;
 	double vuPPMOld = 0;
+	int currDim = 10;
 };
 
 

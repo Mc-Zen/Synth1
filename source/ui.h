@@ -70,6 +70,20 @@ public:
 	tresult PLUGIN_API onLiveMIDIControllerInput(int32 busIndex, int16 channel,
 		CtrlNumber midiCC) SMTG_OVERRIDE;
 
+	int currDim = maxDimension;
+
+	/** Receives the component state. */
+	virtual tresult PLUGIN_API setComponentState(IBStream* state) override {
+		tresult result = Controller::setComponentState(state);
+		int dim = 0;
+		setParamNormalized(kParamDim, dim);
+		if (dim != currDim) {
+			updateKnobs(dim);
+			currDim = dim;
+		}
+		return  result;
+	}
+
 	// VST3EditorDelegate
 	IController* createSubController(UTF8StringPtr name, const IUIDescription* description,
 		VST3Editor* editor) SMTG_OVERRIDE;
@@ -80,7 +94,7 @@ public:
 		if (VSTGUI::CKnobBase* c = dynamic_cast<VSTGUI::CKnobBase*>(view)) {
 			int32 tag = c->getTag();
 			if (tag >= Params::kParamX0 && tag <= Params::kParamX9) {
-				c->setVisible(false);
+				//c->setVisible(false);
 				strikeKnobs[tag - Params::kParamX0] = c;
 			}
 			else if (tag >= Params::kParamY0 && tag <= Params::kParamY9) {
@@ -88,6 +102,17 @@ public:
 			}
 		}
 		return view;
+	}
+
+	void updateKnobs(int dim) {
+		for (int i = 0; i < dim, i++;) {
+			strikeKnobs[i]->setVisible(true);
+			listenKnobs[i]->setVisible(true);
+		}
+		for (int i = dim; i < maxDimension, i++;) {
+			strikeKnobs[i]->setVisible(false);
+			listenKnobs[i]->setVisible(false);
+		}
 	}
 
 	std::array<CKnobBase*, maxDimension> strikeKnobs;
