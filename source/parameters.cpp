@@ -96,7 +96,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamSize:
 			paramState.size = value; break;
 		case kParamDim:
-			paramState.dimension = std::min<int8>((int8)(11 * value + 1), 10);p.dimensionChanged();break;
+			paramState.dimension = std::min<int8>((int8)round(9 * value + 1), 10);p.dimensionChanged();break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
@@ -342,8 +342,12 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
 	addRangeParameter("Resonance Frequency", Params::kParamSize, "%", 0, 100, 0, 1);
-	addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
+	//addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
 
+	param = new RangeParameter(UString256("Dimension"), Params::kParamDim, UString256("D"), 1, 10,10);
+	
+	param->setPrecision(0);
+	parameters.addParameter(param);
 	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));
 
 
@@ -377,6 +381,8 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	tuningRangeParam->appendString(USTRING("[-1, +1] Octave"));
 	tuningRangeParam->appendString(USTRING("[-3, +2] Tunes"));
 	parameters.addParameter(tuningRangeParam);
+
+
 }
 
 tresult PLUGIN_API Controller::setComponentState(IBStream* state)
@@ -434,7 +440,7 @@ tresult PLUGIN_API Controller::setComponentState(IBStream* state)
 
 		setParamNormalized(kParamSize, gps.size);
 		setParamNormalized(kParamResonatorType, plainParamToNormalized(kParamResonatorType, gps.resonatorType));
-		setParamNormalized(kParamDim, gps.dimension);
+		setParamNormalized(kParamDim, plainParamToNormalized(kParamDim, gps.dimension));
 
 	}
 	return result;

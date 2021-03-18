@@ -70,26 +70,21 @@ public:
 	tresult PLUGIN_API onLiveMIDIControllerInput(int32 busIndex, int16 channel,
 		CtrlNumber midiCC) SMTG_OVERRIDE;
 
-	int currDim = maxDimension;
 
-	/** Receives the component state. */
-	virtual tresult PLUGIN_API setComponentState(IBStream* state) override {
-		tresult result = Controller::setComponentState(state);
-		int dim = 0;
-		setParamNormalized(kParamDim, dim);
-		if (dim != currDim) {
-			updateKnobs(dim);
-			currDim = dim;
-		}
-		return  result;
-	}
+	static FUnknown* createInstance(void*) { return (IEditController*)new ControllerWithUI(); }
 
 	// VST3EditorDelegate
 	IController* createSubController(UTF8StringPtr name, const IUIDescription* description,
 		VST3Editor* editor) SMTG_OVERRIDE;
 	bool isPrivateParameter(const ParamID paramID) SMTG_OVERRIDE;
 
-	static FUnknown* createInstance(void*) { return (IEditController*)new ControllerWithUI(); }
+
+	// only show number of position knobs according to dim
+	int currDim = maxDimension;
+	std::array<CKnobBase*, maxDimension> strikeKnobs;
+	std::array<CKnobBase*, maxDimension> listenKnobs;
+
+	// Get all knob ptrs
 	CView* verifyView(CView* view, const UIAttributes& attributes, const IUIDescription* description, VST3Editor* editor) override {
 		if (VSTGUI::CKnobBase* c = dynamic_cast<VSTGUI::CKnobBase*>(view)) {
 			int32 tag = c->getTag();
@@ -104,19 +99,38 @@ public:
 		return view;
 	}
 
+	// reset knob ptrs
+	void editorDestroyed(EditorView* e) override {
+		std::fill(strikeKnobs.begin(), strikeKnobs.end(), nullptr);
+		std::fill(listenKnobs.begin(), listenKnobs.end(), nullptr);
+	}
+
+	// Receive changes of dim from processor
+	virtual tresult PLUGIN_API setParamNormalized(ParamID tag, ParamValue value) override {
+		tresult result = Controller::setParamNormalized(tag, value);
+		if (tag == kParamDim) {
+			int dim = static_cast<int>(normalizedParamToPlain(kParamDim, value));
+			if (strikeKnobs[0] != nullptr && dim != currDim) {
+				updateKnobs(dim);
+				currDim = dim;
+			}
+		}
+		return  result;
+	}
+
+
 	void updateKnobs(int dim) {
-		for (int i = 0; i < dim, i++;) {
+		if (strikeKnobs[0] == nullptr) return;
+		for (int i = 0; i < dim; i++) {
 			strikeKnobs[i]->setVisible(true);
 			listenKnobs[i]->setVisible(true);
 		}
-		for (int i = dim; i < maxDimension, i++;) {
+		for (int i = dim; i < maxDimension; i++) {
 			strikeKnobs[i]->setVisible(false);
 			listenKnobs[i]->setVisible(false);
 		}
 	}
 
-	std::array<CKnobBase*, maxDimension> strikeKnobs;
-	std::array<CKnobBase*, maxDimension> listenKnobs;
 
 	static FUID cid;
 

@@ -226,13 +226,13 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 					queue->addPoint(0, vuPPM, index);
 				}
 			}
-			//if (paramState.dimension != currDim) {
-			queue = data.outputParameterChanges->addParameterData(kParamDim, index);
-			if (queue) {
-				queue->addPoint(0, paramState.dimension, index);
+			if (paramState.dimension != currDim) {
+				queue = data.outputParameterChanges->addParameterData(kParamDim, index);
+				if (queue) {
+					queue->addPoint(0, (paramState.dimension - 1) / 9.0, index);
+				}
+				paramState.dimension = currDim;
 			}
-			paramState.dimension = currDim;
-			//}
 		}
 		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
 		{
@@ -286,7 +286,7 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		data.outputs[0].silenceFlags = 0;
 	}
 
-	systemWrapper.setVelocity_sq({ (float)paramState.size*2000,(float)paramState.decay * 5 });
+	systemWrapper.setVelocity_sq({ (float)paramState.size * 2000,(float)paramState.decay * 5 });
 
 	vuPPMOld = vuPPM;
 	int32 numSamples = data.numSamples;	 // Wie viele Samples hat der Buffer?
