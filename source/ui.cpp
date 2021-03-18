@@ -498,7 +498,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 		}
 		if (keyboardRange.length == 0)
 		{
-			keyboardRange.length = editor->getRect ().getWidth () >= 1024 ? 24 : 12;
+			keyboardRange.length = editor->getRect ().getWidth () >= 300 ? 24 : 12;
 		}
 		return new KeyboardController (editor, playerDelegate, keyboardRange);
 	}
