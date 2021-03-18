@@ -46,7 +46,7 @@
 namespace Steinberg {
 namespace Vst {
 namespace NoteExpressionSynth {
-
+using namespace VSTGUI;
 //-----------------------------------------------------------------------------
 /** Example Note Expression Audio Controller + User Interface */
 class ControllerWithUI : public Controller, public IMidiLearn, public VSTGUI::VST3EditorDelegate
@@ -55,40 +55,56 @@ public:
 	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
 	using IController = VSTGUI::IController;
 	using IUIDescription = VSTGUI::IUIDescription;
-	using VST3Editor = VSTGUI::VST3Editor; 
-	
-	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
-	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
-	IPlugView* PLUGIN_API createView (FIDString name) SMTG_OVERRIDE;
-	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
-	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
-	tresult beginEdit (ParamID tag) SMTG_OVERRIDE;
-	tresult performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
-	tresult endEdit (ParamID tag) SMTG_OVERRIDE;
+	using VST3Editor = VSTGUI::VST3Editor;
+
+	tresult PLUGIN_API initialize(FUnknown* context) SMTG_OVERRIDE;
+	tresult PLUGIN_API terminate() SMTG_OVERRIDE;
+	IPlugView* PLUGIN_API createView(FIDString name) SMTG_OVERRIDE;
+	tresult PLUGIN_API setState(IBStream* state) SMTG_OVERRIDE;
+	tresult PLUGIN_API getState(IBStream* state) SMTG_OVERRIDE;
+	tresult beginEdit(ParamID tag) SMTG_OVERRIDE;
+	tresult performEdit(ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
+	tresult endEdit(ParamID tag) SMTG_OVERRIDE;
 
 	//--- IMidiLearn ---------------------------------
-	tresult PLUGIN_API onLiveMIDIControllerInput (int32 busIndex, int16 channel,
-	                                              CtrlNumber midiCC) SMTG_OVERRIDE;
+	tresult PLUGIN_API onLiveMIDIControllerInput(int32 busIndex, int16 channel,
+		CtrlNumber midiCC) SMTG_OVERRIDE;
 
 	// VST3EditorDelegate
-	IController* createSubController (UTF8StringPtr name, const IUIDescription* description,
-	                                  VST3Editor* editor) SMTG_OVERRIDE;
-	bool isPrivateParameter (const ParamID paramID) SMTG_OVERRIDE;
-	
-	static FUnknown* createInstance (void*) { return (IEditController*)new ControllerWithUI (); }
+	IController* createSubController(UTF8StringPtr name, const IUIDescription* description,
+		VST3Editor* editor) SMTG_OVERRIDE;
+	bool isPrivateParameter(const ParamID paramID) SMTG_OVERRIDE;
+
+	static FUnknown* createInstance(void*) { return (IEditController*)new ControllerWithUI(); }
+	CView* verifyView(CView* view, const UIAttributes& attributes, const IUIDescription* description, VST3Editor* editor) override {
+		if (VSTGUI::CKnobBase* c = dynamic_cast<VSTGUI::CKnobBase*>(view)) {
+			int32 tag = c->getTag();
+			if (tag >= Params::kParamX0 && tag <= Params::kParamX9) {
+				c->setVisible(false);
+				strikeKnobs[tag - Params::kParamX0] = c;
+			}
+			else if (tag >= Params::kParamY0 && tag <= Params::kParamY9) {
+				listenKnobs[tag - Params::kParamY0] = c;
+			}
+		}
+		return view;
+	}
+
+	std::array<CKnobBase*, maxDimension> strikeKnobs;
+	std::array<CKnobBase*, maxDimension> listenKnobs;
 
 	static FUID cid;
 
 	DEFINE_INTERFACES
-		DEF_INTERFACE (IMidiLearn)
-	END_DEFINE_INTERFACES (Controller)
-	REFCOUNT_METHODS (Controller)
+		DEF_INTERFACE(IMidiLearn)
+		END_DEFINE_INTERFACES(Controller)
+		REFCOUNT_METHODS(Controller)
 
 private:
-	VSTGUI::IKeyboardViewPlayerDelegate* playerDelegate {nullptr};
-	VSTGUI::KeyboardViewRangeSelector::Range keyboardRange {};
-	ParamID midiLearnParamID {InvalidParamID};
-	bool doMIDILearn {false};
+	VSTGUI::IKeyboardViewPlayerDelegate* playerDelegate{ nullptr };
+	VSTGUI::KeyboardViewRangeSelector::Range keyboardRange{};
+	ParamID midiLearnParamID{ InvalidParamID };
+	bool doMIDILearn{ false };
 };
 
 //-----------------------------------------------------------------------------
@@ -96,11 +112,11 @@ private:
 class ProcessorWithUIController : public Processor
 {
 public:
-	ProcessorWithUIController ();
+	ProcessorWithUIController();
 
-	static FUnknown* createInstance (void*)
+	static FUnknown* createInstance(void*)
 	{
-		return (IAudioProcessor*)new ProcessorWithUIController ();
+		return (IAudioProcessor*)new ProcessorWithUIController();
 	}
 
 	static FUID cid;

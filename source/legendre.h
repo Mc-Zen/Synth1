@@ -6,7 +6,7 @@
  *
  * Implemented by Mc-Zen
  * https://github.com/Mc-Zen
- * 
+ *
  * with help of James A. Chappells Project
  * http://www.storage-b.com/math-numerical-analysis/1
  *
