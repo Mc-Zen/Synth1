@@ -74,7 +74,8 @@ public:
 	static constexpr int k = 7;
 	static constexpr int numChannels = 2;
 	static constexpr int dim = maxDimension;
-	VSTMath::CubeEigenvalueProblem<type, dim, k, numChannels> cube;
+	static constexpr int defaultStartDim = 5;
+	VSTMath::CubeEigenvalueProblem<type, dim, k, numChannels> cube{ defaultStartDim };
 	VSTMath::SphereEigenvalueProblem<type, dim, k, numChannels> sphere;
 	Filter filter{ Filter::kHighpass }; // we need a fucking filter to keep our speakers from exploding because of the ultra low mega-bass
 	Filter filterR{ Filter::kHighpass }; 

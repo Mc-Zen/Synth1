@@ -85,8 +85,7 @@ tresult PLUGIN_API Processor::notify(IMessage* message)
 	{
 		const void* msgData;
 		uint32 msgSize;
-		if (attr->getBinary(MsgIDEvent, msgData, msgSize) == kResultTrue &&
-			msgSize == sizeof(Event))
+		if (attr->getBinary(MsgIDEvent, msgData, msgSize) == kResultTrue && msgSize == sizeof(Event))
 		{
 			auto evt = reinterpret_cast<const Event*>(msgData);
 			controllerEvents.push(*evt);
@@ -226,13 +225,15 @@ tresult PLUGIN_API Processor::process(ProcessData& data)
 					queue->addPoint(0, vuPPM, index);
 				}
 			}
-			if (paramState.dimension != currDim) {
+			/*if (paramState.dimension != currDim) {
 				queue = data.outputParameterChanges->addParameterData(kParamDim, index);
 				if (queue) {
-					queue->addPoint(0, (paramState.dimension - 1) / 9.0, index);
+					float a = (paramState.dimension - 1) / 9.0;
+					queue->addPoint(0, a, index);
+					//FDebugPrint("asd", )
 				}
 				paramState.dimension = currDim;
-			}
+			}*/
 		}
 		if (voiceProcessor->getActiveVoices() == 0 && data.numOutputs > 0)
 		{
@@ -294,6 +295,10 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 	Sample32* sInR;
 	VSTMath::Vector <GlobalResonatorWrapper::type, GlobalResonatorWrapper::numChannels> tmp;
 	Sample32 pL, pR, avg;
+
+	float wet = paramState.mix;
+	float dry = 1.0f - wet;
+
 	for (int32 i = 0; i < numSamples; i++) {
 
 		// First channel is send into system
@@ -305,8 +310,8 @@ tresult PLUGIN_API Processor::processAudio(ProcessData& data)
 		pL = (Sample32)systemWrapper.filter.process(tmp[0]) * paramState.masterVolume;
 		pR = (Sample32)systemWrapper.filterR.process(tmp[1]) * paramState.masterVolume;
 
-		*((Sample32*)out[0] + i) = pL;
-		*((Sample32*)out[1] + i) = pR;
+		*((Sample32*)out[0] + i) = pL * wet + dry * (*sInL);
+		*((Sample32*)out[1] + i) = pR * wet + dry * (*sInR);
 
 		//avg = (std::abs(pL) + std::abs(pR)) * .5f;
 		vuPPM += std::abs(pL);

@@ -45,7 +45,11 @@ void GlobalParameterState::defaultSettings() {
 	Y[0] = .7;
 	Y[1] = .22;
 	resonatorType = 1;
-	dimension = 10;
+	dimension = GlobalResonatorWrapper::defaultStartDim;
+
+	attackTime = 0.0;
+	mix = 1.0;
+
 
 	bypassSNA = 0;
 }
@@ -96,7 +100,8 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamSize:
 			paramState.size = value; break;
 		case kParamDim:
-			paramState.dimension = std::min<int8>((int8)round(9 * value + 1), 10);p.dimensionChanged();break;
+			//paramState.dimension = std::min<int8>((int8)round(9 * value + 1), 10); p.dimensionChanged(); break;
+			paramState.dimension = std::min<int8>(9, (int8)(value*(9+1)))+1; p.dimensionChanged(); break;
 		case kParamFilterType:
 			paramState.filterType = std::min<int8>((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1); break;
 
@@ -112,12 +117,16 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 
 		case kParamResonatorType:
 			paramState.resonatorType = value; p.resonatorTypeChanged();  break;
+		case kParamAttackTime:
+			paramState.attackTime = value; break;
+		case kParamMix:
+			paramState.mix = value; break;
 
 		}
 	}
 }
 
-static uint64 currentParamStateVersion = 6;
+static uint64 currentParamStateVersion = 7;
 
 tresult GlobalParameterState::setState(IBStream* stream)
 {
@@ -207,6 +216,11 @@ tresult GlobalParameterState::setState(IBStream* stream)
 	{
 		if (!s.readInt8(dimension))	return kResultFalse;
 	}
+	if (version >= 7)
+	{
+		if (!s.readDouble(attackTime)) return kResultFalse;
+		if (!s.readDouble(mix))	return kResultFalse;
+	}
 	return kResultTrue;
 }
 
@@ -293,6 +307,10 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	// version 6
 	if (!s.writeInt8(dimension)) return kResultFalse;
 
+	// version 7
+
+	if (!s.writeDouble(attackTime)) return kResultFalse;
+	if (!s.writeDouble(mix))	return kResultFalse;
 
 	return kResultTrue;
 }
@@ -339,15 +357,17 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Y7", Params::kParamY7, "%", 0, 100, 50, 0);
 	addRangeParameter("Y8", Params::kParamY8, "%", 0, 100, 50, 0);
 	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 50, 0);
-	
-	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 1);
-	addRangeParameter("Resonance Frequency", Params::kParamSize, "%", 0, 100, 0, 1);
-	//addRangeParameter("Dimension", Params::kParamDim, " ", 1, 10, 10, 0);
 
-	param = new RangeParameter(UString256("Dimension"), Params::kParamDim, UString256("D"), 1, 10,10);
-	
-	param->setPrecision(0);
+	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 0);
+	addRangeParameter("Resonance Frequency", Params::kParamSize, "Hz", 0, 100, 0, 1);
+
+	addRangeParameter("Attack Time", Params::kParamAttackTime, "s", 0, MAX_ATTACK_TIME_SEC, 0, 2);
+	addRangeParameter("Wet/Dry Mix", Params::kParamMix, "%", 0, 100, 0, 0);
+
+	param = new RangeParameter(UString256("Dimension"), Params::kParamDim, UString256("D"), 1, 10, 5, 10);
+	param->getInfo().stepCount = 9;
 	parameters.addParameter(param);
+
 	parameters.addParameter(new RangeParameter(USTRING("Output Volume"), Params::kParamOutputVolume, nullptr, 0, 1, 0, 0, ParameterInfo::kIsReadOnly));
 
 
@@ -441,6 +461,10 @@ tresult PLUGIN_API Controller::setComponentState(IBStream* state)
 		setParamNormalized(kParamSize, gps.size);
 		setParamNormalized(kParamResonatorType, plainParamToNormalized(kParamResonatorType, gps.resonatorType));
 		setParamNormalized(kParamDim, plainParamToNormalized(kParamDim, gps.dimension));
+
+
+		setParamNormalized(kParamAttackTime, gps.attackTime);
+		setParamNormalized(kParamMix, gps.mix);
 
 	}
 	return result;

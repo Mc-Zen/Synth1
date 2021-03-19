@@ -439,7 +439,8 @@ public:
 template <class T, int d, int N, int numChannels>
 class CubeEigenvalueProblem : public EigenvalueProblemAmplitudeBase<T, d, N, numChannels> {
 public:
-	CubeEigenvalueProblem() {
+	CubeEigenvalueProblem(int defaultActualDims = d) {
+		actualDim = defaultActualDims;
 		computeEigenvalues_and_ks();
 	}
 

@@ -8,6 +8,7 @@
 #include <array>
 #define MAX_VOICES				64
 #define MAX_RELEASE_TIME_SEC	5.0
+#define MAX_ATTACK_TIME_SEC		2.0
 #define NUM_FILTER_TYPE			3
 #define NUM_TUNING_RANGE		2 
 
@@ -70,6 +71,9 @@ enum Params : Steinberg::Vst::ParamID
 	kParamResonatorType,
 	kParamDim,
 	kParamOutputVolume,   // OUT
+	kParamAttackTime,
+	kParamMix,
+
 
 	kNumGlobalParameters
 };
@@ -106,9 +110,11 @@ struct GlobalParameterState
 
 	int8 resonatorType;			// {0,1}
 
-	int8 dimension;			// {1,...,10}
+	int8 dimension;				// {1,...,10}
 
 	ParamValue outputVolume;	// [0, +1] OUT
+	ParamValue attackTime;		// [0, +1]
+	ParamValue mix;				// [0, +1] // only Fx, 1 is 100% Wet
 
 	// All from [0, 1]
 	std::array<ParamValue, maxDimension> X; // input (striking) position in #N D

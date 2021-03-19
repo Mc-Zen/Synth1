@@ -137,6 +137,11 @@ public:
 	//VSTMath::CubeEigenvalueProblem<float, 4, 5, 1> system;
 
 
+	int32 samplesFromNoteOn = 0;
+	int32 attackTimeInSamples = 0;
+	int32 sampleRate;
+	ParamValue currentADSRVolume = 1;
+	ParamValue attackRamp = 1;
 
 	void reset() {
 		system.silence();
@@ -144,10 +149,18 @@ public:
 	}
 
 	void setSampleRate(ParamValue sampleRate) {
+		this->sampleRate = sampleRate;
 		system.setSampleRate((float)sampleRate);
 	}
 
-	void noteOn(int32 _pitch, ParamValue velocity, float _tuning, int32 sampleOffset, int32 nId, const GlobalParameterState* gps) {
+	// attackTime is normalized
+	void noteOn(int32 _pitch, ParamValue velocity, float _tuning, int32 sampleOffset, int32 nId, const GlobalParameterState* gps, ParamValue attackTime=1.0) {
+		samplesFromNoteOn = 0;
+		attackTimeInSamples = static_cast<int32>(MAX_ATTACK_TIME_SEC*attackTime*sampleRate);
+		if (attackTimeInSamples != 0) {
+			currentADSRVolume = 0;
+			attackRamp = 1 / static_cast<ParamValue>(attackTimeInSamples);
+		}
 		noteoffFlag = false;
 		system.resetTime(); // let's avoid a discontinuity at beginning
 		system.setVelocity_sq({ VoiceStatics::freqTab[_pitch],std::max((float)gps->decay * 5.f,0.f) });
@@ -166,7 +179,11 @@ public:
 	}
 
 	type nextFirstChannel() {
-		type sample = system.nextFirstChannel();
+		if (samplesFromNoteOn < attackTimeInSamples) {
+			currentADSRVolume += attackRamp;
+		}
+		samplesFromNoteOn++;
+		type sample = currentADSRVolume*system.nextFirstChannel();
 		if (noteoffFlag) {
 			// find first zero crossing
 			if (std::abs(sample) < 0.0001) {
@@ -231,6 +248,8 @@ protected:
 
 	ParamValue levelFromVel;
 	ParamValue noteOffVolumeRamp;
+
+	ParamValue attackTime;
 
 	PhysicalSystemWrapper systemWrapper;
 };
@@ -565,7 +584,7 @@ void Voice<SamplePrecision>::noteOn(int32 _pitch, ParamValue velocity, float _tu
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn(_pitch, velocity, _tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
 
-	systemWrapper.noteOn(_pitch, velocity, _tuning, sampleOffset, nId, this->globalParameters);
+	systemWrapper.noteOn(_pitch, velocity, _tuning, sampleOffset, nId, this->globalParameters, this->globalParameters->attackTime);
 }
 
 //-----------------------------------------------------------------------------

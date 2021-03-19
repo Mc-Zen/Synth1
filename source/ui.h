@@ -104,12 +104,17 @@ public:
 		std::fill(strikeKnobs.begin(), strikeKnobs.end(), nullptr);
 		std::fill(listenKnobs.begin(), listenKnobs.end(), nullptr);
 	}
+	void editorAttached(EditorView* e) override {
+		if (strikeKnobs[0] != nullptr)
+			updateKnobs(currDim);
+	}
 
 	// Receive changes of dim from processor
 	virtual tresult PLUGIN_API setParamNormalized(ParamID tag, ParamValue value) override {
 		tresult result = Controller::setParamNormalized(tag, value);
 		if (tag == kParamDim) {
 			int dim = static_cast<int>(normalizedParamToPlain(kParamDim, value));
+			dim = std::min<int8>(9, int32(value * (9 + 1))) + 1;
 			if (strikeKnobs[0] != nullptr && dim != currDim) {
 				updateKnobs(dim);
 				currDim = dim;
