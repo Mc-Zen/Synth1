@@ -43,17 +43,41 @@ double sin_lut(double x) {
 	constexpr double pi_halfs = pi<double>() / 2;
 	return cos_lut(x - pi_halfs);
 }
-// Really good and smooth approximation. About twice to three times as fast as std::cos when optimized but
-// 3 times slower in Debug mode
-template<typename T>
-inline T cos_approx(T x) noexcept
+
+/*template<typename T>
+inline T cos_approx2(T x) noexcept
 {
-	constexpr T r_twopi = 1. / (2. * 3.1415926);
+	constexpr T r_twopi = 1. / (2. * 3.14159265358);
 	T a = std::abs(x);
 	// (x/2π - 0.25 + [x + 0.25])·16·(|x| - 0.5) + 0.225x(|x| - 1)
 	return (x * r_twopi - T(.25) + std::floor(x + T(.25))) * T(16.) * (a - T(.5)) + T(.225) * x * (a - T(1.));
+}*/
+// Really good and smooth approximation. About twice to three times as fast as std::cos when optimized but
+// 3 times slower in Debug mode
+template<typename T>
+inline T cos_approx(T x) noexcept {
+	constexpr T tp = 1. / (2. * 3.14159265358);
+	x *= tp;
+	x -= T(.25) + std::floor(x + T(.25));
+	x *= T(16.) * (std::abs(x) - T(.5));
+	x += T(.225) * x * (std::abs(x) - T(1.));
+
+	return x;
 }
-
-
+template<typename T>
+constexpr T csin(T x) {
+	auto z = x * x;
+	return x * (1 - z * (1 / 6.0 - z * (1 / 120.0 - z * (1 / 5040.0 - z * (1 / 362880.0)))));
+}
+template<typename T>
+constexpr T ccos(T x) {
+	T sign = 1;
+	if (x > pi<T>()) {
+		sign = -1;
+		x -= pi<T>();
+	}
+	auto z = x * x;
+	return sign * (1 - z * (1.0 / 2.0 - z * (1.0 / 24.0 - z * (1.0 / 720.0 - z * (1.0 / 40320.0 - z * (1.0 / 3628800.0 - z * (1.0 / 479001600.0 - z*(1.0 / (13*14*479001600.0)))))))));
+}
 }
 #endif

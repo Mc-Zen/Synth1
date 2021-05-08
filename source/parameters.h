@@ -84,37 +84,37 @@ struct GlobalParameterState
 	bool bypass = false;
 	BrownNoise<float>* noiseBuffer;
 
-	ParamValue masterVolume;	// [0, +1]
-	ParamValue masterTuning;	// [-1, +1]
-	ParamValue velToLevel;		// [0, +1]
+	ParamValue masterVolume;		// [0, +1]
+	ParamValue masterTuning;		// [-1, +1]
+	ParamValue velToLevel;			// [0, +1]
 
-	ParamValue radiusStrike;	// [0, +1]
-	ParamValue radiusListening;	// [0, +1]
-	ParamValue thetaStrike;		// [0, +1]
-	ParamValue thetaListening;	// [0, +1]
-	ParamValue phiStrike;		// [0, +1]
-	ParamValue phiListening;	// [0, +1]
+	ParamValue radiusStrike;		// [0, +1]
+	ParamValue radiusListening;		// [0, +1]
+	ParamValue thetaStrike;			// [0, +1]
+	ParamValue thetaListening;		// [0, +1]
+	ParamValue phiStrike;			// [0, +1]
+	ParamValue phiListening;		// [0, +1]
 
-	ParamValue releaseTime;		// [0, +1]
-	ParamValue decay;			// [0, +1]
-	ParamValue size;			// [0, +1]
+	ParamValue releaseTime;			// [0, +1]
+	ParamValue decay;				// [0, +1]
+	ParamValue resonanceFrequency;	// [0, +1]
 
-	ParamValue filterFreq;		// [-1, +1]
-	ParamValue filterQ;			// [-1, +1]
-	ParamValue freqModDepth;	// [-1, +1]
+	ParamValue filterFreq;			// [-1, +1]
+	ParamValue filterQ;				// [-1, +1]
+	ParamValue freqModDepth;		// [-1, +1]
 
-	int8 filterType;			// [0, 1, 2]
-	int8 tuningRange;			// [0, 1]
+	int8 filterType;				// [0, 1, 2]
+	int8 tuningRange;				// [0, 1]
 
-	int8 bypassSNA;				// [0, 1]
+	int8 bypassSNA;					// [0, 1]
 
-	int8 resonatorType;			// {0,1}
+	int8 resonatorType;				// {0, 1}
 
-	int8 dimension;				// {1,...,10}
+	int8 dimension;					// {1,...,10}
 
-	ParamValue outputVolume;	// [0, +1] OUT
-	ParamValue attackTime;		// [0, +1]
-	ParamValue mix;				// [0, +1] // only Fx, 1 is 100% Wet
+	ParamValue outputVolume;		// [0, +1] OUT
+	ParamValue attackTime;			// [0, +1]
+	ParamValue mix;					// [0, +1] // only Fx, 1 is 100% Wet
 
 	// All from [0, 1]
 	std::array<ParamValue, maxDimension> X; // input (striking) position in #N D

@@ -48,7 +48,7 @@ extern void* moduleHandle;
 #define stringPluginName "Tesseract"
 
 
-BEGIN_FACTORY_DEF("Roggenburg Technology",
+BEGIN_FACTORY_DEF("Roggenburg Technologies",
 	"http://www.steinberg.net",
 	"mailto:info@steinberg.de")
 

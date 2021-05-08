@@ -178,19 +178,23 @@ public:
 		noteoffFlag = true;
 	}
 
+	// Called when release time has elapsed
+	void noteFinished() {
+		system.silence();
+	}
+
 	type nextFirstChannel() {
 		if (samplesFromNoteOn < attackTimeInSamples) {
 			currentADSRVolume += attackRamp;
 		}
 		samplesFromNoteOn++;
-		type sample = currentADSRVolume*system.nextFirstChannel();
-		if (noteoffFlag) {
+		// release already deals with discontinuities:
+		/*if (noteoffFlag) {
 			// find first zero crossing
 			if (std::abs(sample) < 0.0001) {
-				system.silence();
 			}
-		}
-		return sample;
+		}*/
+		return  currentADSRVolume * system.nextFirstChannel();
 	}
 
 private:
@@ -485,6 +489,8 @@ bool Voice<SamplePrecision>::process(SamplePrecision* outputBuffers[2], int32 nu
 				else
 				{
 					this->noteOffSampleOffset = this->noteOnSampleOffset = -1;
+					// tone is finished
+					systemWrapper.noteFinished();
 					return false;
 				}
 			}

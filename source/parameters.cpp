@@ -17,7 +17,7 @@ void GlobalParameterState::defaultSettings() {
 	bypass = false;
 
 	noiseBuffer = nullptr;
-	masterVolume = .8;
+	masterVolume = .81;
 	masterTuning = 0;
 	velToLevel = 1.;
 
@@ -30,7 +30,7 @@ void GlobalParameterState::defaultSettings() {
 
 	releaseTime = 0;
 	decay = .2;
-	size = .5;
+	resonanceFrequency = .5;
 
 	filterFreq = 1;
 	filterQ = 0;
@@ -98,7 +98,7 @@ void processParameters(Steinberg::Vst::IParamValueQueue* queue, GlobalParameterS
 		case kParamDecay:
 			paramState.decay = value; break;
 		case kParamSize:
-			paramState.size = value; break;
+			paramState.resonanceFrequency = value; break;
 		case kParamDim:
 			//paramState.dimension = std::min<int8>((int8)round(9 * value + 1), 10); p.dimensionChanged(); break;
 			paramState.dimension = std::min<int8>(9, (int8)(value*(9+1)))+1; p.dimensionChanged(); break;
@@ -208,7 +208,7 @@ tresult GlobalParameterState::setState(IBStream* stream)
 		if (!s.readDouble(Y[8])) return kResultFalse;
 		if (!s.readDouble(Y[9])) return kResultFalse;
 
-		if (!s.readDouble(size)) return kResultFalse;
+		if (!s.readDouble(resonanceFrequency)) return kResultFalse;
 		if (!s.readInt8(resonatorType))	return kResultFalse;
 	}
 
@@ -301,7 +301,7 @@ tresult GlobalParameterState::getState(IBStream* stream)
 	if (!s.writeDouble(Y[8])) return kResultFalse;
 	if (!s.writeDouble(Y[9])) return kResultFalse;
 
-	if (!s.writeDouble(size)) return kResultFalse;
+	if (!s.writeDouble(resonanceFrequency)) return kResultFalse;
 	if (!s.writeInt8(resonatorType)) return kResultFalse;
 
 	// version 6
@@ -359,7 +359,7 @@ void initParameters(Steinberg::Vst::ParameterContainer& parameters) {
 	addRangeParameter("Y9", Params::kParamY9, "%", 0, 100, 50, 0);
 
 	addRangeParameter("Angle", Params::kParamAngle, "%", 0, 100, 0, 0);
-	addRangeParameter("Resonance Frequency", Params::kParamSize, "Hz", 0, 100, 0, 1);
+	addRangeParameter("Resonance Frequency", Params::kParamSize, "Hz", 0, 2000, 0, 1);
 
 	addRangeParameter("Attack Time", Params::kParamAttackTime, "s", 0, MAX_ATTACK_TIME_SEC, 0, 2);
 	addRangeParameter("Wet/Dry Mix", Params::kParamMix, "%", 0, 100, 0, 0);
@@ -458,7 +458,7 @@ tresult PLUGIN_API Controller::setComponentState(IBStream* state)
 		setParamNormalized(kParamY8, gps.Y[8]);
 		setParamNormalized(kParamY9, gps.Y[9]);
 
-		setParamNormalized(kParamSize, gps.size);
+		setParamNormalized(kParamSize, gps.resonanceFrequency);
 		setParamNormalized(kParamResonatorType, plainParamToNormalized(kParamResonatorType, gps.resonatorType));
 		setParamNormalized(kParamDim, plainParamToNormalized(kParamDim, gps.dimension));
 
